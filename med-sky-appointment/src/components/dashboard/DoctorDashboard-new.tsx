@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PrescriptionManagement from '@/components/doctor/PrescriptionManagement';
+import AppointmentManagement from '@/components/doctor/AppointmentManagement';
+import PatientManagement from '@/components/doctor/PatientManagement';
+import AnalyticsReports from '@/components/doctor/AnalyticsReports';
+import DoctorSettings from '@/components/doctor/DoctorSettings';
 import { 
   Calendar, 
   Users, 
@@ -160,11 +164,13 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
 
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="patients">Patients</TabsTrigger>
           <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -322,37 +328,23 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
         </TabsContent>
 
         <TabsContent value="appointments">
-          <Card>
-            <CardHeader>
-              <CardTitle>Appointment Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Appointment Management</h3>
-                <p className="text-gray-600">Appointment management features will be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
+          <AppointmentManagement user={user} />
         </TabsContent>
 
         <TabsContent value="patients">
-          <Card>
-            <CardHeader>
-              <CardTitle>Patient Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Patient Management</h3>
-                <p className="text-gray-600">Patient management features will be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
+          <PatientManagement user={user} />
         </TabsContent>
 
         <TabsContent value="prescriptions">
           <PrescriptionManagement doctor={user} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <AnalyticsReports user={user} />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <DoctorSettings user={user} />
         </TabsContent>
       </Tabs>
     </div>
