@@ -223,32 +223,126 @@ const Navbar = () => {
                 Contact
               </Link>
               
+              {/* Authentication Section for Mobile */}
               <div className="pt-4 border-t border-sky-100 mt-4">
-                <div className="space-y-2">
-                  <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                    <Link to="/login/patient" onClick={() => setIsMenuOpen(false)}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Patient Login
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                    <Link to="/login/doctor" onClick={() => setIsMenuOpen(false)}>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Doctor Login
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                    <Link to="/login/admin" onClick={() => setIsMenuOpen(false)}>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Admin Login
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full gradient-sky text-white">
-                    <Link to="/book-appointment" onClick={() => setIsMenuOpen(false)}>
-                      Book Appointment
-                    </Link>
-                  </Button>
-                </div>
+                {isAuthenticated && user ? (
+                  <div className="space-y-2">
+                    {/* User Info */}
+                    <div className="px-3 py-2 bg-sky-50 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.profileImage || '/placeholder.svg'} />
+                          <AvatarFallback className="text-xs">
+                            {user.firstName[0]}{user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <Badge className={getRoleColor(user.role)} variant="secondary" size="sm">
+                            <div className="flex items-center space-x-1">
+                              {getRoleIcon(user.role)}
+                              <span className="capitalize text-xs">{user.role}</span>
+                            </div>
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* User Menu Items */}
+                    <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                      <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                        <User className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Link>
+                    </Button>
+                    
+                    {user.role === 'patient' && (
+                      <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                        <Link to="/book-appointment" onClick={() => setIsMenuOpen(false)}>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Book Appointment
+                        </Link>
+                      </Button>
+                    )}
+                    
+                    <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                      <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Link>
+                    </Button>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Login Section */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2 px-1">Login</p>
+                      <div className="space-y-1">
+                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                          <Link to="/login/patient" onClick={() => setIsMenuOpen(false)}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Patient Login
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                          <Link to="/login/doctor" onClick={() => setIsMenuOpen(false)}>
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Doctor Login
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
+                          <Link to="/login/admin" onClick={() => setIsMenuOpen(false)}>
+                            <Shield className="h-4 w-4 mr-2" />
+                            Admin Login
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Register Section */}
+                    <div className="pt-2 border-t border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-2 px-1">New User? Register</p>
+                      <div className="space-y-1">
+                        <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                          <Link to="/signup/patient" onClick={() => setIsMenuOpen(false)}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Register as Patient
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild className="w-full justify-start">
+                          <Link to="/signup/doctor" onClick={() => setIsMenuOpen(false)}>
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Register as Doctor
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* CTA Button */}
+                    <div className="pt-2">
+                      <Button asChild className="w-full gradient-sky text-white">
+                        <Link to="/book-appointment" onClick={() => setIsMenuOpen(false)}>
+                          Book Appointment
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

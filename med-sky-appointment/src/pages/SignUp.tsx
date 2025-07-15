@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -31,10 +31,18 @@ import {
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register, isLoading, error, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
+  
+  // Extract user type from URL path
+  const userTypeFromUrl = location.pathname.split('/').pop();
+  const initialRole = ['patient', 'doctor'].includes(userTypeFromUrl || '') 
+    ? (userTypeFromUrl as 'patient' | 'doctor') 
+    : 'patient';
+  
+  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | 'admin'>(initialRole);
 
   const [formData, setFormData] = useState({
     firstName: '',

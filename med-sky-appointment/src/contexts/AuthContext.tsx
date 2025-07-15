@@ -64,7 +64,7 @@ const initialState: AuthState = {
   doctorProfile: null,
   token: localStorage.getItem('token'),
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Start with loading true to check auth on app start
   error: null,
 };
 
