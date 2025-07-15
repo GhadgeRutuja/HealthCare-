@@ -19,7 +19,7 @@ VITE_API_URL=https://healthcare-backend-ghadgerutuja.onrender.com
 # Database Name: Medicare
 # Username: ghadge
 # Password: ghadge123
-# Cluster: cluster0.e1eqd.mongodb.net
+# Cluster: Get from your Atlas dashboard - the old cluster0.e1eqd.mongodb.net doesn't exist
 
 ## Deployment URLs (Update these with your actual URLs)
 # Frontend: https://health-care-ghadgerutuja.vercel.app
