@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminApi } from '@/services/api';
 import PatientDashboard from '@/components/dashboard/PatientDashboard';
+import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -172,6 +173,10 @@ const Dashboard: React.FC = () => {
 
   if (userType === 'patient') {
     return <PatientDashboard user={user} />;
+  }
+
+  if (userType === 'doctor') {
+    return <DoctorDashboard user={user} />;
   }
 
   const content = getDashboardContent();

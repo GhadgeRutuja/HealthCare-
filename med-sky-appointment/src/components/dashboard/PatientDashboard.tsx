@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,9 @@ import {
   Target,
   Thermometer,
   Weight,
-  Droplets
+  Droplets,
+  Users,
+  Loader2
 } from 'lucide-react';
 import { User as UserType } from '@/services/api';
 
@@ -39,91 +41,64 @@ interface PatientDashboardProps {
 
 const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [appointments, setAppointments] = useState([]);
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Enhanced mock data - in real app, this would come from API
-  const upcomingAppointments = [
+  // Fetch real data on component mount
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        // const appointmentsData = await api.getPatientAppointments(user.id);
+        // const recordsData = await api.getPatientMedicalRecords(user.id);
+        // const prescriptionsData = await api.getPatientPrescriptions(user.id);
+        
+        // For now, set empty arrays - will be populated with real data
+        setAppointments([]);
+        setMedicalRecords([]);
+        setPrescriptions([]);
+      } catch (error) {
+        console.error('Failed to fetch patient data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [user.id]);
+
+  // Keep only real doctors data for Find Doctors feature
+  const availableDoctors = [
     {
       id: 1,
-      doctorName: 'Dr. Sarah Johnson',
+      name: 'Dr. Sarah Johnson',
       specialty: 'Cardiology',
-      date: '2025-07-20',
-      time: '10:00 AM',
-      status: 'confirmed',
-      type: 'Follow-up',
       avatar: '/placeholder.svg',
       rating: 4.9,
-      consultationFee: 150
+      consultationFee: 150,
+      available: true
     },
     {
       id: 2,
-      doctorName: 'Dr. Michael Chen',
+      name: 'Dr. Michael Chen',
       specialty: 'Neurology',
-      date: '2025-07-25',
-      time: '2:00 PM',
-      status: 'pending',
-      type: 'Consultation',
       avatar: '/placeholder.svg',
       rating: 4.7,
-      consultationFee: 200
-    }
-  ];
-
-  const recentRecords = [
-    {
-      id: 1,
-      date: '2025-07-10',
-      doctor: 'Dr. Emily Rodriguez',
-      type: 'Blood Test',
-      status: 'completed',
-      priority: 'normal',
-      results: 'Normal values'
-    },
-    {
-      id: 2,
-      date: '2025-07-05',
-      doctor: 'Dr. Sarah Johnson',
-      type: 'Cardiac Checkup',
-      status: 'completed',
-      priority: 'high',
-      results: 'Follow-up needed'
+      consultationFee: 200,
+      available: true
     },
     {
       id: 3,
-      date: '2025-06-28',
-      doctor: 'Dr. Mark Thompson',
-      type: 'General Checkup',
-      status: 'completed',
-      priority: 'normal',
-      results: 'Excellent health'
+      name: 'Dr. Emily Rodriguez',
+      specialty: 'General Medicine',
+      avatar: '/placeholder.svg',
+      rating: 4.8,
+      consultationFee: 120,
+      available: true
     }
-  ];
-
-  const medications = [
-    {
-      id: 1,
-      name: 'Metformin',
-      dosage: '500mg',
-      frequency: 'Twice daily',
-      remaining: 15,
-      total: 30,
-      nextRefill: '2025-07-30'
-    },
-    {
-      id: 2,
-      name: 'Lisinopril',
-      dosage: '10mg',
-      frequency: 'Once daily',
-      remaining: 8,
-      total: 30,
-      nextRefill: '2025-07-25'
-    }
-  ];
-
-  const vitals = [
-    { name: 'Blood Pressure', value: '120/80', unit: 'mmHg', status: 'normal', icon: Heart, color: 'text-green-600' },
-    { name: 'Heart Rate', value: '72', unit: 'bpm', status: 'normal', icon: Activity, color: 'text-blue-600' },
-    { name: 'Temperature', value: '98.6', unit: '°F', status: 'normal', icon: Thermometer, color: 'text-orange-600' },
-    { name: 'Weight', value: '165', unit: 'lbs', status: 'normal', icon: Weight, color: 'text-purple-600' }
   ];
 
   const getStatusColor = (status: string) => {
@@ -183,8 +158,8 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
               </div>
               <div className="ml-3 sm:ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Upcoming</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{upcomingAppointments.length}</p>
-                <p className="text-xs text-gray-500">This week</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{appointments.length}</p>
+                <p className="text-xs text-gray-500">Appointments</p>
               </div>
             </div>
           </CardContent>
@@ -198,23 +173,8 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
               </div>
               <div className="ml-3 sm:ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Records</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{recentRecords.length}</p>
-                <p className="text-xs text-gray-500">Recent</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
-              </div>
-              <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Health Score</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">85%</p>
-                <p className="text-xs text-green-600">+5% from last month</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{medicalRecords.length}</p>
+                <p className="text-xs text-gray-500">Medical records</p>
               </div>
             </div>
           </CardContent>
@@ -227,9 +187,24 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                 <Pill className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
               <div className="ml-3 sm:ml-4">
-                <p className="text-xs sm:text-sm font-medium text-gray-600">Medications</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{medications.length}</p>
-                <p className="text-xs text-orange-600">1 needs refill</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Prescriptions</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{prescriptions.length}</p>
+                <p className="text-xs text-gray-500">Active prescriptions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+              </div>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Doctors</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{availableDoctors.length}</p>
+                <p className="text-xs text-green-600">Available now</p>
               </div>
             </div>
           </CardContent>
@@ -254,9 +229,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
               </Button>
             </CardHeader>
             <CardContent>
-              {upcomingAppointments.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-sky-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading appointments...</p>
+                </div>
+              ) : appointments.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingAppointments.map((appointment) => (
+                  {appointments.map((appointment) => (
                     <div key={appointment.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -278,10 +258,6 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                                 <Clock className="h-4 w-4 mr-1" />
                                 {appointment.time}
                               </div>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Star className="h-4 w-4 mr-1 text-yellow-400" />
-                                {appointment.rating}
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -290,19 +266,21 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                             {appointment.status}
                           </Badge>
                           <p className="text-xs text-gray-500 mt-1">{appointment.type}</p>
-                          <p className="text-sm font-medium text-gray-900 mt-1">${appointment.consultationFee}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming appointments</h3>
-                  <p className="text-gray-600 mb-4">Book your first appointment with a doctor</p>
+                <div className="text-center py-12">
+                  <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments scheduled</h3>
+                  <p className="text-gray-600 mb-6">Book your first appointment with one of our qualified doctors</p>
                   <Button asChild className="bg-sky-600 hover:bg-sky-700">
-                    <Link to="/find-doctors">Find Doctors</Link>
+                    <Link to="/find-doctors">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Find Doctors
+                    </Link>
                   </Button>
                 </div>
               )}
@@ -322,9 +300,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
               </Button>
             </CardHeader>
             <CardContent>
-              {recentRecords.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading medical records...</p>
+                </div>
+              ) : medicalRecords.length > 0 ? (
                 <div className="space-y-4">
-                  {recentRecords.map((record) => (
+                  {medicalRecords.map((record) => (
                     <div key={record.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -344,10 +327,16 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <div className="text-center py-12">
+                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No medical records</h3>
-                  <p className="text-gray-600">Your medical records will appear here</p>
+                  <p className="text-gray-600 mb-6">Your medical records from appointments and tests will appear here</p>
+                  <Button asChild variant="outline">
+                    <Link to="/find-doctors">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Book First Appointment
+                    </Link>
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -406,31 +395,47 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Pill className="h-5 w-5 mr-2 text-purple-600" />
-                Current Medications
+                Current Prescriptions
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {medications.map((med) => (
-                  <div key={med.id} className="border rounded-lg p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900">{med.name}</h4>
-                      <Badge variant={med.remaining <= 10 ? "destructive" : "secondary"}>
-                        {med.remaining} left
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">{med.dosage} - {med.frequency}</p>
-                    <div className="mt-2">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Remaining</span>
-                        <span>{med.remaining}/{med.total}</span>
+              {loading ? (
+                <div className="text-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">Loading prescriptions...</p>
+                </div>
+              ) : prescriptions.length > 0 ? (
+                <div className="space-y-4">
+                  {prescriptions.map((prescription) => (
+                    <div key={prescription.id} className="border rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-gray-900">{prescription.medication}</h4>
+                        <Badge variant={prescription.status === 'active' ? "default" : "secondary"}>
+                          {prescription.status}
+                        </Badge>
                       </div>
-                      <Progress value={(med.remaining / med.total) * 100} className="h-2" />
+                      <p className="text-sm text-gray-600">{prescription.dosage} - {prescription.frequency}</p>
+                      <p className="text-xs text-gray-500 mt-1">Prescribed by {prescription.doctorName}</p>
+                      <p className="text-xs text-gray-500">Date: {prescription.prescribedDate}</p>
+                      {prescription.notes && (
+                        <p className="text-xs text-blue-600 mt-2">Note: {prescription.notes}</p>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">Next refill: {med.nextRefill}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No prescriptions</h3>
+                  <p className="text-gray-600 mb-4">Prescriptions from your doctors will appear here</p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/find-doctors">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Consult a Doctor
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
