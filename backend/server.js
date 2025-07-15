@@ -51,7 +51,7 @@ app.use(compression());
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.CORS_ORIGIN, 'https://your-frontend.vercel.app']
+    ? process.env.CORS_ORIGIN?.split(',').map(url => url.trim()) || ['https://your-frontend.vercel.app']
     : ['http://localhost:8080', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
