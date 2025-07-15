@@ -3,7 +3,7 @@
 
 ## Backend Environment Variables (For Render)
 NODE_ENV=production
-MONGODB_URI=mongodb+srv://ghadge:ghadge123@rutuja.2jshv.mongodb.net/Medicare?retryWrites=true&w=majority&appName=Rutuja
+MONGODB_URI=mongodb+srv://Rutuja8304:pass@rutuja.2jshv.mongodb.net/Medicare?retryWrites=true&w=majority&appName=Rutuja
 JWT_SECRET=medicare_super_secure_jwt_secret_key_2024_production_rutuja_ghadge
 CORS_ORIGIN=https://health-care-ghadgerutuja.vercel.app
 
@@ -17,9 +17,10 @@ VITE_API_URL=https://healthcare-backend-ghadgerutuja.onrender.com
 
 ## MongoDB Atlas Configuration
 # Database Name: Medicare
-# Username: ghadge
-# Password: ghadge123
+# Username: Rutuja8304
+# Password: pass
 # Cluster: rutuja.2jshv.mongodb.net (CORRECT - Active cluster found!)
+# User Description: Admin(MediCare)
 
 ## Deployment URLs (Update these with your actual URLs)
 # Frontend: https://health-care-ghadgerutuja.vercel.app
