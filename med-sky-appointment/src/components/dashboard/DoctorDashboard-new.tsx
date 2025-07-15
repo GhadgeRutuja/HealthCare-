@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PrescriptionManagement from '@/components/doctor/PrescriptionManagement';
-import AppointmentManagement from '@/components/doctor/AppointmentManagement';
 import { 
   Calendar, 
   Users, 
@@ -323,7 +322,18 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
         </TabsContent>
 
         <TabsContent value="appointments">
-          <AppointmentManagement user={user} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointment Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Appointment Management</h3>
+                <p className="text-gray-600">Appointment management features will be implemented here</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="patients">
