@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminApi } from '@/services/api';
+import PatientDashboard from '@/components/dashboard/PatientDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ import {
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
   if (authLoading) {
@@ -42,11 +43,10 @@ const Dashboard: React.FC = () => {
 
   const userType = user.role;
   const userProfile = {
-    name: user.name,
+    name: `${user.firstName} ${user.lastName}`,
     email: user.email,
     phone: user.phone,
-    role: user.role,
-    ...(user.doctorProfile && { doctorProfile: user.doctorProfile })
+    role: user.role
   };
 
   // Mock appointments data
@@ -168,6 +168,10 @@ const Dashboard: React.FC = () => {
   // Special rendering for admin dashboard
   if (userType === 'admin') {
     return <AdminDashboard />;
+  }
+
+  if (userType === 'patient') {
+    return <PatientDashboard user={user} />;
   }
 
   const content = getDashboardContent();
