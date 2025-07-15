@@ -21,6 +21,10 @@ const Login = () => {
   const location = useLocation();
   const { login, isLoading, error, clearError } = useAuth();
   
+  // Extract user type from URL path
+  const userType = location.pathname.split('/').pop();
+  const isSpecificLogin = ['patient', 'doctor', 'admin'].includes(userType || '');
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -31,6 +35,46 @@ const Login = () => {
 
   // Get the intended destination from location state
   const from = location.state?.from?.pathname || '/dashboard';
+
+  // Get user type specific info
+  const getUserTypeInfo = () => {
+    if (!isSpecificLogin) {
+      return {
+        title: 'Sign in to your account',
+        subtitle: 'Welcome back! Please sign in to continue.',
+        icon: '🏥'
+      };
+    }
+    
+    switch (userType) {
+      case 'patient':
+        return {
+          title: 'Patient Login',
+          subtitle: 'Access your health records and book appointments',
+          icon: '👤'
+        };
+      case 'doctor':
+        return {
+          title: 'Doctor Login', 
+          subtitle: 'Manage your appointments and patient records',
+          icon: '🩺'
+        };
+      case 'admin':
+        return {
+          title: 'Admin Login',
+          subtitle: 'Access administrative dashboard and controls',
+          icon: '🛡️'
+        };
+      default:
+        return {
+          title: 'Sign in to your account',
+          subtitle: 'Welcome back! Please sign in to continue.',
+          icon: '🏥'
+        };
+    }
+  };
+
+  const typeInfo = getUserTypeInfo();
 
   // Clear errors when form changes
   React.useEffect(() => {
@@ -91,20 +135,28 @@ const Login = () => {
       <div className="flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-6 sm:space-y-8">
           <div className="text-center">
+            <div className="text-4xl mb-4">{typeInfo.icon}</div>
             <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold text-gray-900">
-              Sign in to your account
+              {typeInfo.title}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Or{' '}
-              <Link to="/signup" className="font-medium text-sky-600 hover:text-sky-500">
-                create a new account
-              </Link>
+              {typeInfo.subtitle}
             </p>
+            {!isSpecificLogin && (
+              <p className="mt-2 text-sm text-gray-600">
+                Or{' '}
+                <Link to="/signup" className="font-medium text-sky-600 hover:text-sky-500">
+                  create a new account
+                </Link>
+              </p>
+            )}
           </div>
           
           <Card className="shadow-lg">
             <CardHeader className="space-y-1 sm:space-y-2">
-              <CardTitle className="text-center text-lg sm:text-xl">Login</CardTitle>
+              <CardTitle className="text-center text-lg sm:text-xl">
+                {isSpecificLogin ? `${userType?.charAt(0).toUpperCase()}${userType?.slice(1)} Login` : 'Login'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               {error && (
