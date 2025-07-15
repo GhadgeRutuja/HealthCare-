@@ -88,10 +88,10 @@ const Login = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold text-gray-900">
               Sign in to your account
             </h2>
             <p className="mt-2 text-sm text-gray-600">
@@ -103,20 +103,20 @@ const Login = () => {
           </div>
           
           <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-center">Login</CardTitle>
+            <CardHeader className="space-y-1 sm:space-y-2">
+              <CardTitle className="text-center text-lg sm:text-xl">Login</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {error && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert variant="destructive" className="mb-4 sm:mb-6">
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <div className="relative">
+                  <Label htmlFor="email" className="text-sm">Email Address</Label>
+                  <div className="relative mt-1">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="email"
@@ -124,7 +124,7 @@ const Login = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="pl-10"
+                      className="pl-10 h-11 sm:h-12"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -132,8 +132,8 @@ const Login = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
+                  <Label htmlFor="password" className="text-sm">Password</Label>
+                  <div className="relative mt-1">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="password"
@@ -141,7 +141,7 @@ const Login = () => {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 h-11 sm:h-12"
                       placeholder="Enter your password"
                     />
                     <button
@@ -155,7 +155,7 @@ const Login = () => {
                   {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="rememberMe"
@@ -180,7 +180,7 @@ const Login = () => {
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="w-full bg-sky-600 hover:bg-sky-700"
+                  className="w-full bg-sky-600 hover:bg-sky-700 h-11 sm:h-12 text-base"
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
