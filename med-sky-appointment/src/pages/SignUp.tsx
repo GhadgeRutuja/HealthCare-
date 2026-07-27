@@ -61,14 +61,14 @@ const SignUp = () => {
     },
     // Doctor-specific fields
     licenseNumber: '',
-    specialties: [''],
+    specialties: [],
     education: [{
       degree: '',
       institution: '',
       graduationYear: new Date().getFullYear()
     }],
     consultationFee: '',
-    languages: [''],
+    languages: [],
     bio: ''
   });
 
@@ -158,7 +158,7 @@ const SignUp = () => {
 
     if (selectedRole === 'doctor') {
       if (!formData.licenseNumber.trim()) errors.licenseNumber = 'License number is required';
-      if (!formData.specialties[0]?.trim()) errors.specialties = 'At least one specialty is required';
+      if (formData.specialties.length === 0 || !formData.specialties[0]?.trim()) errors.specialties = 'At least one specialty is required';
       if (!formData.education[0]?.degree?.trim()) errors.education = 'Education degree is required';
       if (!formData.education[0]?.institution?.trim()) errors.education = 'Education institution is required';
       if (!formData.consultationFee) errors.consultationFee = 'Consultation fee is required';
@@ -176,6 +176,10 @@ const SignUp = () => {
     }
 
     try {
+      // Filter out empty specialties
+      const cleanSpecialties = formData.specialties.filter(s => s && s.trim());
+      const cleanLanguages = formData.languages.filter(l => l && l.trim());
+      
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -190,17 +194,19 @@ const SignUp = () => {
         }),
         ...(selectedRole === 'doctor' && {
           licenseNumber: formData.licenseNumber,
-          specialties: formData.specialties.filter(s => s.trim()),
+          specialties: cleanSpecialties.length > 0 ? cleanSpecialties : ['General Medicine'],
           education: formData.education,
           consultationFee: parseInt(formData.consultationFee),
-          languages: formData.languages.filter(l => l.trim()),
+          languages: cleanLanguages.length > 0 ? cleanLanguages : ['English'],
           bio: formData.bio
         })
       };
 
+      console.log('📝 Submitting form data:', userData);
       await register(userData);
       navigate('/dashboard');
     } catch (error) {
+      console.error('❌ Registration error:', error);
       // Error is handled by the context
     }
   };
@@ -490,35 +496,61 @@ const SignUp = () => {
                     {/* Specialties */}
                     <div>
                       <Label>Medical Specialties *</Label>
-                      {formData.specialties.map((specialty, index) => (
-                        <div key={index} className="flex gap-2 mt-2">
-                          <Input
-                            value={specialty}
-                            onChange={(e) => handleArrayChange('specialties', index, e.target.value)}
-                            placeholder="Enter specialty"
-                          />
-                          {formData.specialties.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeArrayField('specialties', index)}
-                            >
-                              Remove
-                            </Button>
-                          )}
+                      <p className="text-gray-600 text-sm mb-3">Choose from our list of recognized specialties</p>
+                      
+                      <div className="space-y-2 mb-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {['Cardiology', 'Neurology', 'Ophthalmology', 'Orthopedics', 'Pediatrics', 'General Medicine', 'Dermatology', 'Psychiatry', 'Radiology', 'Emergency Medicine', 'Surgery', 'Internal Medicine', 'Family Medicine', 'Oncology', 'Anesthesiology'].map((spec) => (
+                            <label key={spec} className="flex items-center gap-2 p-2 border rounded hover:bg-blue-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData.specialties.includes(spec)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    if (!formData.specialties.includes(spec)) {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        specialties: [...prev.specialties.filter(s => s), spec]
+                                      }));
+                                    }
+                                  } else {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      specialties: prev.specialties.filter(s => s !== spec)
+                                    }));
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{spec}</span>
+                            </label>
+                          ))}
                         </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addArrayField('specialties')}
-                        className="mt-2"
-                      >
-                        Add Specialty
-                      </Button>
-                      {formErrors.specialties && <p className="text-red-500 text-sm mt-1">{formErrors.specialties}</p>}
+                      </div>
+
+                      {formData.specialties.length > 0 && formData.specialties[0] && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded">
+                          <p className="text-sm font-medium text-blue-900 mb-2">Selected Specialties:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.specialties.filter(s => s).map((spec, idx) => (
+                              <span key={idx} className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                                {spec}
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData(prev => ({
+                                    ...prev,
+                                    specialties: prev.specialties.filter((_, i) => i !== idx)
+                                  }))}
+                                  className="hover:text-blue-900"
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {formErrors.specialties && <p className="text-red-500 text-sm mt-2">{formErrors.specialties}</p>}
                     </div>
 
                     {/* Education */}
@@ -578,34 +610,58 @@ const SignUp = () => {
                         <Globe className="h-4 w-4" />
                         Languages Spoken
                       </Label>
-                      {formData.languages.map((language, index) => (
-                        <div key={index} className="flex gap-2 mt-2">
-                          <Input
-                            value={language}
-                            onChange={(e) => handleArrayChange('languages', index, e.target.value)}
-                            placeholder="Enter language"
-                          />
-                          {formData.languages.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeArrayField('languages', index)}
-                            >
-                              Remove
-                            </Button>
-                          )}
+                      <p className="text-gray-600 text-sm mb-3">Check the languages you speak fluently</p>
+                      
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {['English', 'Spanish', 'French', 'German', 'Mandarin', 'Hindi', 'Arabic', 'Portuguese'].map((lang) => (
+                          <label key={lang} className="flex items-center gap-2 p-2 border rounded hover:bg-blue-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.languages.includes(lang)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  if (!formData.languages.includes(lang)) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      languages: [...prev.languages.filter(l => l), lang]
+                                    }));
+                                  }
+                                } else {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    languages: prev.languages.filter(l => l !== lang)
+                                  }));
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{lang}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {formData.languages.length > 0 && formData.languages[0] && (
+                        <div className="p-3 bg-green-50 rounded">
+                          <p className="text-sm font-medium text-green-900 mb-2">Selected Languages:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.languages.filter(l => l).map((lang, idx) => (
+                              <span key={idx} className="bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                                {lang}
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData(prev => ({
+                                    ...prev,
+                                    languages: prev.languages.filter((_, i) => i !== idx)
+                                  }))}
+                                  className="hover:text-green-900"
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addArrayField('languages')}
-                        className="mt-2"
-                      >
-                        Add Language
-                      </Button>
+                      )}
                     </div>
 
                     {/* Bio */}

@@ -33,19 +33,17 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { User as UserType } from '@/services/api';
+import { User as UserType, appointmentsApi, Appointment } from '@/services/api';
 
 interface PrescriptionManagementProps {
   doctor: UserType;
 }
 
-interface Patient {
+interface AppointmentSelect {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  lastVisit?: string;
+  patientName: string;
+  patientEmail: string;
+  date: string;
   avatar?: string;
 }
 
@@ -64,9 +62,9 @@ interface Prescription {
 }
 
 const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor }) => {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointmentsList, setAppointmentsList] = useState<AppointmentSelect[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentSelect | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingPrescription, setIsAddingPrescription] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -81,56 +79,48 @@ const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor 
     notes: ''
   });
 
-  // Mock data for patients - in real app, this would come from API
+  // Fetch real appointments to get patients and past prescriptions
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
-        // const patientsData = await api.getDoctorPatients(doctor.id);
-        // const prescriptionsData = await api.getDoctorPrescriptions(doctor.id);
-        
-        // Mock patients data
-        const mockPatients: Patient[] = [
-          {
-            id: '1',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@email.com',
-            phone: '+1-555-0123',
-            lastVisit: '2025-07-10',
-            avatar: '/placeholder.svg'
-          },
-          {
-            id: '2',
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane.smith@email.com',
-            phone: '+1-555-0124',
-            lastVisit: '2025-07-08',
-            avatar: '/placeholder.svg'
-          }
-        ];
+        const res = await appointmentsApi.getAll();
+        if (res.success) {
+          const apts = res.data;
+          
+          // Map to dropdown selection
+          const selectList: AppointmentSelect[] = apts.map((apt: any) => ({
+            id: apt._id,
+            patientName: `${apt.patient?.firstName} ${apt.patient?.lastName}`,
+            patientEmail: apt.patient?.email,
+            date: new Date(apt.appointmentDate).toLocaleDateString(),
+            avatar: apt.patient?.profileImage
+          }));
+          setAppointmentsList(selectList);
 
-        // Mock prescriptions data
-        const mockPrescriptions: Prescription[] = [
-          {
-            id: '1',
-            patientId: '1',
-            patientName: 'John Doe',
-            medication: 'Amoxicillin',
-            dosage: '500mg',
-            frequency: 'Three times daily',
-            duration: '7 days',
-            instructions: 'Take with food',
-            notes: 'For bacterial infection',
-            prescribedDate: '2025-07-10',
-            status: 'active'
-          }
-        ];
-
-        setPatients(mockPatients);
-        setPrescriptions(mockPrescriptions);
+          // Map existing prescriptions
+          const existingPrescriptions: Prescription[] = [];
+          apts.forEach((apt: any) => {
+            if (apt.prescription && apt.prescription.medications && apt.prescription.medications.length > 0) {
+              apt.prescription.medications.forEach((med: any, index: number) => {
+                existingPrescriptions.push({
+                  id: `${apt._id}-${index}`,
+                  patientId: apt.patient?._id,
+                  patientName: `${apt.patient?.firstName} ${apt.patient?.lastName}`,
+                  medication: med.name,
+                  dosage: med.dosage,
+                  frequency: med.frequency,
+                  duration: med.duration,
+                  instructions: med.instructions,
+                  notes: apt.prescription.notes,
+                  prescribedDate: new Date(apt.updatedAt || apt.appointmentDate).toLocaleDateString(),
+                  status: 'active'
+                });
+              });
+            }
+          });
+          setPrescriptions(existingPrescriptions);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -141,40 +131,55 @@ const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor 
     fetchData();
   }, [doctor._id]);
 
-  const filteredPatients = patients.filter(patient => 
-    `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAppointments = appointmentsList.filter(apt => 
+    apt.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    apt.patientEmail.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddPrescription = async () => {
-    if (!selectedPatient) return;
+    if (!selectedAppointment) return;
 
     try {
-      const prescription: Prescription = {
-        id: Date.now().toString(),
-        patientId: selectedPatient.id,
-        patientName: `${selectedPatient.firstName} ${selectedPatient.lastName}`,
-        ...newPrescription,
-        prescribedDate: new Date().toISOString().split('T')[0],
-        status: 'active'
+      const payload = {
+        medications: [{
+          name: newPrescription.medication,
+          dosage: newPrescription.dosage,
+          frequency: newPrescription.frequency,
+          duration: newPrescription.duration,
+          instructions: newPrescription.instructions
+        }],
+        notes: newPrescription.notes
       };
 
-      // TODO: Replace with actual API call
-      // await api.createPrescription(prescription);
+      const res = await appointmentsApi.addPrescription(selectedAppointment.id, payload);
       
-      setPrescriptions([...prescriptions, prescription]);
-      setNewPrescription({
-        medication: '',
-        dosage: '',
-        frequency: '',
-        duration: '',
-        instructions: '',
-        notes: ''
-      });
-      setIsAddingPrescription(false);
-      setSelectedPatient(null);
+      if (res.success) {
+        // Add to local state to reflect immediately
+        const addedPrescription: Prescription = {
+          id: Date.now().toString(),
+          patientId: selectedAppointment.id, // Just for UI keying
+          patientName: selectedAppointment.patientName,
+          ...newPrescription,
+          prescribedDate: new Date().toLocaleDateString(),
+          status: 'active'
+        };
+        
+        setPrescriptions([addedPrescription, ...prescriptions]);
+        
+        setNewPrescription({
+          medication: '',
+          dosage: '',
+          frequency: '',
+          duration: '',
+          instructions: '',
+          notes: ''
+        });
+        setIsAddingPrescription(false);
+        setSelectedAppointment(null);
+      }
     } catch (error) {
       console.error('Failed to add prescription:', error);
+      alert('Failed to save prescription.');
     }
   };
 
@@ -213,12 +218,12 @@ const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor 
             <div className="space-y-6">
               {/* Patient Selection */}
               <div className="space-y-2">
-                <Label htmlFor="patient-search">Select Patient</Label>
+                <Label htmlFor="patient-search">Select Patient Appointment</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="patient-search"
-                    placeholder="Search patients..."
+                    placeholder="Search by patient name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -227,27 +232,27 @@ const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor 
                 
                 {searchTerm && (
                   <div className="max-h-40 overflow-y-auto border rounded-md">
-                    {filteredPatients.map((patient) => (
+                    {filteredAppointments.map((apt) => (
                       <div
-                        key={patient.id}
+                        key={apt.id}
                         className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${
-                          selectedPatient?.id === patient.id ? 'bg-sky-50 border-sky-200' : ''
+                          selectedAppointment?.id === apt.id ? 'bg-sky-50 border-sky-200' : ''
                         }`}
                         onClick={() => {
-                          setSelectedPatient(patient);
-                          setSearchTerm(`${patient.firstName} ${patient.lastName}`);
+                          setSelectedAppointment(apt);
+                          setSearchTerm(`${apt.patientName} (Apt: ${apt.date})`);
                         }}
                       >
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={patient.avatar} />
+                            <AvatarImage src={apt.avatar} />
                             <AvatarFallback>
-                              {patient.firstName[0]}{patient.lastName[0]}
+                              {apt.patientName[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{patient.firstName} {patient.lastName}</p>
-                            <p className="text-sm text-gray-500">{patient.email}</p>
+                            <p className="font-medium">{apt.patientName}</p>
+                            <p className="text-xs text-gray-500">Apt Date: {apt.date} | {apt.patientEmail}</p>
                           </div>
                         </div>
                       </div>
@@ -256,9 +261,9 @@ const PrescriptionManagement: React.FC<PrescriptionManagementProps> = ({ doctor 
                 )}
               </div>
 
-              {selectedPatient && (
+              {selectedAppointment && (
                 <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium">Prescription Details</h4>
+                  <h4 className="font-medium">Prescription Details for {selectedAppointment.patientName}</h4>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>

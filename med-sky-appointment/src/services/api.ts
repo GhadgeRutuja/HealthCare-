@@ -164,6 +164,76 @@ export const appointmentsApi = {
   // Cancel appointment
   cancel: (id: string) =>
     apiService.delete<ApiResponse<void>>(`/appointments/${id}`),
+
+  // Add prescription
+  addPrescription: (id: string, prescriptionData: any) =>
+    apiService.put<ApiResponse<Appointment>>(`/appointments/${id}/prescription`, prescriptionData),
+};
+
+// Records-related API calls
+export const recordsApi = {
+  // Get all records
+  getAll: (patientId?: string) => {
+    const query = patientId ? `?patientId=${patientId}` : '';
+    return apiService.get<ApiResponse<any[]>>(`/records${query}`);
+  },
+
+  // Upload record
+  upload: async (formData: FormData) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/records/upload`, {
+      method: 'POST',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: formData, // Do not set Content-Type, browser will set it to multipart/form-data with boundary
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Upload failed');
+    }
+    
+    return await response.json();
+  },
+
+  // Delete record
+  delete: (id: string) =>
+    apiService.delete<ApiResponse<void>>(`/records/${id}`),
+};
+
+// Notifications-related API calls
+export const notificationsApi = {
+  // Get all notifications
+  getAll: () =>
+    apiService.get<ApiResponse<any[]>>('/notifications'),
+
+  // Get unread count
+  getUnreadCount: () =>
+    apiService.get<ApiResponse<number>>('/notifications/unread-count'),
+
+  // Mark single as read
+  markAsRead: (id: string) =>
+    apiService.put<ApiResponse<any>>(`/notifications/${id}/read`, {}),
+
+  // Mark all as read
+  markAllAsRead: () =>
+    apiService.put<ApiResponse<any>>('/notifications/read-all', {}),
+};
+
+// Messages-related API calls
+export const messagesApi = {
+  // Send message
+  send: (receiverId: string, content: string) =>
+    apiService.post<ApiResponse<any>>('/messages', { receiverId, content }),
+
+  // Get conversation history
+  getHistory: (userId: string) =>
+    apiService.get<ApiResponse<any[]>>(`/messages/${userId}`),
+
+  // Get conversation list
+  getConversations: () =>
+    apiService.get<ApiResponse<any[]>>('/messages/conversations/list'),
 };
 
 // Users-related API calls

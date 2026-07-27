@@ -19,6 +19,19 @@ export default {
 		},
 		extend: {
 			colors: {
+				sky: {
+					50: '#f4f7fc',
+					100: '#e6eff9',
+					200: '#c7dbf1',
+					300: '#95bee5',
+					400: '#5b9bd7',
+					500: '#2b7cd0',
+					600: '#1e6fd9', // Premium StrokeAI Blue
+					700: '#195bb2',
+					800: '#154b91',
+					900: '#134078',
+					950: '#0e2a52',
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -57,10 +70,17 @@ export default {
 					foreground: 'hsl(var(--sidebar-foreground))',
 					primary: 'hsl(var(--sidebar-primary))',
 					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+					accent: 'hsl(var(--sidebar-active))',
+					'accent-foreground': 'hsl(var(--sidebar-active-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				stroke: {
+					blue: 'hsl(var(--accent-blue))',
+					yellow: 'hsl(var(--accent-yellow))',
+					green: 'hsl(var(--accent-green))',
+					red: 'hsl(var(--accent-red))',
+					cyan: 'hsl(var(--accent-cyan))',
 				}
 			},
 			borderRadius: {

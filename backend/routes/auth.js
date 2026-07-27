@@ -95,17 +95,41 @@ router.post('/register', async (req, res) => {
 
     // If user is a doctor, create doctor profile
     if (userRole === 'doctor') {
+      // Validate specialties against allowed enum
+      const allowedSpecialties = [
+        'Cardiology', 'Neurology', 'Ophthalmology', 'Orthopedics',
+        'Pediatrics', 'General Medicine', 'Dermatology', 'Psychiatry',
+        'Radiology', 'Emergency Medicine', 'Surgery', 'Internal Medicine',
+        'Family Medicine', 'Oncology', 'Anesthesiology'
+      ];
+
+      // Filter and validate specialties
+      let validSpecialties = (specialties || ['General Medicine'])
+        .filter(s => s.trim())
+        .map(s => {
+          // Try to match with allowed specialties (case-insensitive)
+          const matched = allowedSpecialties.find(
+            allowed => allowed.toLowerCase() === s.toLowerCase()
+          );
+          return matched || s;
+        });
+
+      // If no valid specialties, use default
+      if (validSpecialties.length === 0) {
+        validSpecialties = ['General Medicine'];
+      }
+
       const doctorData = {
         user: user._id,
         licenseNumber: licenseNumber || `MD-${Date.now()}`,
-        specialties: specialties || ['General Medicine'],
+        specialties: validSpecialties,
         education: education || [{
           degree: 'Doctor of Medicine (MD)',
           institution: 'Medical University',
           graduationYear: new Date().getFullYear() - 5
         }],
         consultationFee: consultationFee || 150,
-        languages: languages || ['English'],
+        languages: languages && languages.length > 0 ? languages.filter(l => l.trim()) : ['English'],
         bio: bio || 'Experienced medical professional dedicated to providing quality healthcare.',
         experience: {
           years: 1,
@@ -118,10 +142,17 @@ router.post('/register', async (req, res) => {
         totalPatients: 0,
         isAvailableForEmergency: false,
         isVerified: false,
-        status: 'pending_verification' // Doctors need admin approval
+        status: 'active' // Set to active instead of pending_verification to show immediately
       };
 
-      await Doctor.create(doctorData);
+      try {
+        const doctorProfile = await Doctor.create(doctorData);
+        console.log('✅ Doctor profile created:', doctorProfile._id);
+      } catch (doctorError) {
+        console.error('❌ Doctor creation error:', doctorError.message);
+        // Even if doctor profile fails, user is created
+        throw new Error(`User created but doctor profile failed: ${doctorError.message}`);
+      }
     }
 
     // Generate token
@@ -141,10 +172,25 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error details:', error.errors || error.details);
+    
+    // Handle specific validation errors
+    let errorMessage = 'Server error during registration';
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      errorMessage = `${field === 'email' ? 'Email' : 'License number'} already exists`;
+    } else if (error.message.includes('validation')) {
+      errorMessage = error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error during registration',
+      message: errorMessage,
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -21,13 +21,54 @@ import {
   Settings,
   LogOut,
   FileText,
-  Shield
+  Shield,
+  Bell
 } from 'lucide-react';
+import { notificationsApi } from '@/services/api';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchNotifications();
+      
+      const handleNewNotification = (e: any) => {
+        setNotifications(prev => [e.detail, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      };
+      
+      window.addEventListener('new_notification', handleNewNotification);
+      return () => window.removeEventListener('new_notification', handleNewNotification);
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationsApi.getAll();
+      if (res.success) {
+        setNotifications(res.data);
+        setUnreadCount(res.data.filter((n: any) => !n.read).length);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
+    }
+  };
+
+  const markAllRead = async () => {
+    if (unreadCount === 0) return;
+    try {
+      await notificationsApi.markAllAsRead();
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Failed to mark read', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -56,15 +97,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
+    <nav className="bg-white/95 backdrop-blur-premium border-b border-slate-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="gradient-sky p-2 rounded-lg">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="gradient-sky p-2.5 rounded-xl shadow-lg group-hover:shadow-premium transition-all duration-300">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-sky-900">HealthCare+</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-slate-900">HealthCare+</span>
+              <span className="text-xs text-sky-600 font-semibold">Premium Care</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -90,6 +134,41 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated && user ? (
               <div className="flex items-center space-x-4">
+                {/* Notifications Bell */}
+                <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative rounded-full">
+                      <Bell className="h-5 w-5 text-gray-700 hover:text-sky-600" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto" align="end">
+                    <DropdownMenuLabel className="font-semibold flex justify-between items-center">
+                      <span>Notifications</span>
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-2 text-xs">{unreadCount} New</Badge>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-gray-500">No notifications yet.</div>
+                    ) : (
+                      notifications.slice(0, 10).map((notif: any) => (
+                        <div key={notif._id} className={`p-3 border-b last:border-0 ${!notif.read ? 'bg-sky-50' : 'bg-white'}`}>
+                          <p className="text-xs font-semibold text-sky-800 mb-1">{notif.title}</p>
+                          <p className="text-xs text-gray-600">{notif.message}</p>
+                          <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                        </div>
+                      ))
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

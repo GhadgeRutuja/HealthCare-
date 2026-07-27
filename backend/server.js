@@ -52,7 +52,7 @@ app.use(compression());
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.CORS_ORIGIN?.split(',').map(url => url.trim()) || ['https://your-frontend.vercel.app']
-    : ['http://localhost:8080', 'http://localhost:3000'],
+    : ['http://localhost:8080', 'http://localhost:8081', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -77,6 +77,8 @@ require('./models/Doctor');
 require('./models/Service');
 require('./models/Appointment');
 
+const path = require('path');
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
@@ -85,6 +87,12 @@ app.use('/api/patients', require('./routes/patients'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/services', require('./routes/services'));
 app.use('/api/admin', require('./routes/admin'));  // Admin routes
+app.use('/api/records', require('./routes/records')); // Medical records
+app.use('/api/notifications', require('./routes/notifications')); // Notifications
+app.use('/api/messages', require('./routes/messages')); // Messages
+
+// Static folder for file uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -115,12 +123,51 @@ app.use((err, req, res, next) => {
   });
 });
 
+
+// Socket.io setup
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: corsOptions
+});
+
+// Map of user IDs to socket IDs
+const userSockets = new Map();
+
+io.on('connection', (socket) => {
+  console.log('⚡ Socket connected:', socket.id);
+
+  socket.on('register', (userId) => {
+    if (userId) {
+      userSockets.set(userId.toString(), socket.id);
+      console.log(`User ${userId} registered with socket ${socket.id}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 Socket disconnected:', socket.id);
+    // Remove from map
+    for (const [userId, socketId] of userSockets.entries()) {
+      if (socketId === socket.id) {
+        userSockets.delete(userId);
+        break;
+      }
+    }
+  });
+});
+
+// Make io accessible to routers
+app.set('io', io);
+app.set('userSockets', userSockets);
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 MediCare Backend Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📍 API Base URL: http://localhost:${PORT}/api`);
 });
 
-module.exports = app;
+module.exports = server;

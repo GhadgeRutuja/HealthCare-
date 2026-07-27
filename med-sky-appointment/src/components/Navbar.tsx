@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -17,19 +17,58 @@ import {
   Menu, 
   X, 
   Calendar,
-  Users,
-  Shield,
-  ChevronDown,
   User,
   Settings,
   LogOut,
-  FileText
+  FileText,
+  Shield,
+  Bell
 } from 'lucide-react';
+import { notificationsApi } from '@/services/api';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchNotifications();
+      
+      const handleNewNotification = (e: any) => {
+        setNotifications(prev => [e.detail, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      };
+      
+      window.addEventListener('new_notification', handleNewNotification);
+      return () => window.removeEventListener('new_notification', handleNewNotification);
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationsApi.getAll();
+      if (res.success) {
+        setNotifications(res.data);
+        setUnreadCount(res.data.filter((n: any) => !n.read).length);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
+    }
+  };
+
+  const markAllRead = async () => {
+    if (unreadCount === 0) return;
+    try {
+      await notificationsApi.markAllAsRead();
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Failed to mark read', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -58,15 +97,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-sky-100 sticky top-0 z-50">
+    <nav className="bg-white/95 backdrop-blur-premium border-b border-slate-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="gradient-sky p-2 rounded-lg">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="gradient-sky p-2.5 rounded-xl shadow-lg group-hover:shadow-premium transition-all duration-300">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-sky-900">HealthCare+</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-slate-900">HealthCare+</span>
+              <span className="text-xs text-sky-600 font-semibold">Premium Care</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -92,6 +134,41 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated && user ? (
               <div className="flex items-center space-x-4">
+                {/* Notifications Bell */}
+                <DropdownMenu onOpenChange={(open) => { if (open) markAllRead(); }}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative rounded-full">
+                      <Bell className="h-5 w-5 text-gray-700 hover:text-sky-600" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1 right-1 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto" align="end">
+                    <DropdownMenuLabel className="font-semibold flex justify-between items-center">
+                      <span>Notifications</span>
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-2 text-xs">{unreadCount} New</Badge>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-gray-500">No notifications yet.</div>
+                    ) : (
+                      notifications.slice(0, 10).map((notif: any) => (
+                        <div key={notif._id} className={`p-3 border-b last:border-0 ${!notif.read ? 'bg-sky-50' : 'bg-white'}`}>
+                          <p className="text-xs font-semibold text-sky-800 mb-1">{notif.title}</p>
+                          <p className="text-xs text-gray-600">{notif.message}</p>
+                          <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                        </div>
+                      ))
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -172,7 +249,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
@@ -183,164 +260,127 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-sky-100">
-              <Link 
-                to="/" 
-                className="block px-3 py-2 text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md"
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
+              <Link
+                to="/"
+                className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
-              <Link 
-                to="/services" 
-                className="block px-3 py-2 text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md"
+              <Link
+                to="/services"
+                className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Services
               </Link>
-              <Link 
-                to="/doctors" 
-                className="block px-3 py-2 text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md"
+              <Link
+                to="/doctors"
+                className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Find Doctors
               </Link>
-              <Link 
-                to="/about" 
-                className="block px-3 py-2 text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md"
+              <Link
+                to="/about"
+                className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
-              <Link 
-                to="/contact" 
-                className="block px-3 py-2 text-gray-700 hover:text-sky-600 hover:bg-sky-50 rounded-md"
+              <Link
+                to="/contact"
+                className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
               </Link>
-              
-              {/* Authentication Section for Mobile */}
-              <div className="pt-4 border-t border-sky-100 mt-4">
+
+              {/* Mobile Authentication */}
+              <div className="border-t pt-4">
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
-                    {/* User Info */}
-                    <div className="px-3 py-2 bg-sky-50 rounded-md">
-                      <div className="flex items-center space-x-2">
+                    <div className="px-3 py-2">
+                      <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.profileImage || '/placeholder.svg'} />
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback>
                             {user.firstName[0]}{user.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {user.firstName} {user.lastName}
-                          </p>
-                          <Badge className={getRoleColor(user.role)} variant="secondary" size="sm">
+                        <div>
+                          <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
+                          <Badge className={getRoleColor(user.role)} variant="secondary">
                             <div className="flex items-center space-x-1">
                               {getRoleIcon(user.role)}
-                              <span className="capitalize text-xs">{user.role}</span>
+                              <span className="capitalize">{user.role}</span>
                             </div>
                           </Badge>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* User Menu Items */}
-                    <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                      <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                        <User className="h-4 w-4 mr-2" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                    
+                    <Link
+                      to="/dashboard"
+                      className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
                     {user.role === 'patient' && (
-                      <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                        <Link to="/book-appointment" onClick={() => setIsMenuOpen(false)}>
-                          <Calendar className="h-4 w-4 mr-2" />
+                      <>
+                        <Link
+                          to="/book-appointment"
+                          className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
                           Book Appointment
                         </Link>
-                      </Button>
+                        <Link
+                          to="/medical-records"
+                          className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Medical Records
+                        </Link>
+                      </>
                     )}
-                    
-                    <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                      <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
-                      </Link>
-                    </Button>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Link
+                      to="/profile"
+                      className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                    <button
                       onClick={() => {
                         handleLogout();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
+                      Log out
+                    </button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {/* Login Section */}
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2 px-1">Login</p>
-                      <div className="space-y-1">
-                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                          <Link to="/login/patient" onClick={() => setIsMenuOpen(false)}>
-                            <Users className="h-4 w-4 mr-2" />
-                            Patient Login
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                          <Link to="/login/doctor" onClick={() => setIsMenuOpen(false)}>
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Doctor Login
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild className="w-full justify-start">
-                          <Link to="/login/admin" onClick={() => setIsMenuOpen(false)}>
-                            <Shield className="h-4 w-4 mr-2" />
-                            Admin Login
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Register Section */}
-                    <div className="pt-2 border-t border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-2 px-1">New User? Register</p>
-                      <div className="space-y-1">
-                        <Button variant="outline" size="sm" asChild className="w-full justify-start">
-                          <Link to="/signup/patient" onClick={() => setIsMenuOpen(false)}>
-                            <Users className="h-4 w-4 mr-2" />
-                            Register as Patient
-                          </Link>
-                        </Button>
-                        <Button variant="outline" size="sm" asChild className="w-full justify-start">
-                          <Link to="/signup/doctor" onClick={() => setIsMenuOpen(false)}>
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Register as Doctor
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* CTA Button */}
-                    <div className="pt-2">
-                      <Button asChild className="w-full gradient-sky text-white">
-                        <Link to="/book-appointment" onClick={() => setIsMenuOpen(false)}>
-                          Book Appointment
-                        </Link>
-                      </Button>
-                    </div>
+                  <div className="space-y-2">
+                    <Link
+                      to="/login"
+                      className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="block px-3 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors mx-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
                   </div>
                 )}
               </div>

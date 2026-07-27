@@ -188,8 +188,9 @@ doctorSchema.virtual('experienceLevel').get(function() {
 
 // Virtual for rating display
 doctorSchema.virtual('ratingDisplay').get(function() {
-  if (!this.rating || this.rating.count === 0) return 'No ratings yet';
-  return `${this.rating.average.toFixed(1)} (${this.rating.count} reviews)`;
+  if (!this.rating || !this.rating.count || this.rating.count === 0) return 'No ratings yet';
+  const average = this.rating.average || 0;
+  return `${average.toFixed(1)} (${this.rating.count} reviews)`;
 });
 
 // Indexes for better query performance

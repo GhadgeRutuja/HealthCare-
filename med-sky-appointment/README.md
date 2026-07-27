@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
+# HealthCare+ - Comprehensive Medical Care Platform
 
-## Project info
+A modern, full-stack healthcare management system built with React, TypeScript, and Node.js.
 
-**URL**: https://lovable.dev/projects/582be370-869e-4fda-9118-407b125923c9
+**Project**: HealthCare+ Medical Platform
+**Repository**: https://github.com/GhadgeRutuja/HealthCare-
 
-## How can I edit this code?
+## ✨ Features
 
-There are several ways of editing your application.
+This is a comprehensive telemedicine platform with the following features:
 
-**Use Lovable**
+### 🏥 Core Healthcare Features
+- **Patient Management**: Complete patient registration, medical history tracking, and appointment management
+- **Doctor Dashboard**: Professional interface with 9 comprehensive tabs including telemedicine, messaging, and notifications
+- **Appointment Booking**: Smart scheduling system with real-time availability
+- **Telemedicine**: Full virtual consultation interface with video calling capabilities
+- **Real-time Messaging**: Secure doctor-patient communication platform
+- **Notification Center**: Smart categorization and priority-based alert system
+- **Prescription Management**: Digital prescription writing and tracking
+- **Medical Records**: Comprehensive patient medical history management
+- **Analytics & Reports**: Performance metrics and healthcare insights
+- **Admin Dashboard**: Complete administrative controls and user management
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/582be370-869e-4fda-9118-407b125923c9) and start prompting.
+### 💻 Technical Features
+- **Responsive Design**: Optimized for all screen sizes
+- **Real-time Updates**: Live notifications and messaging
+- **Secure Authentication**: JWT-based authentication with role management
+- **API Integration**: RESTful API with comprehensive error handling
+- **Database**: MongoDB with proper indexing and relationships
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Tech Stack
 
-**Use your preferred IDE**
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **shadcn/ui** for modern UI components
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **Recharts** for data visualization
+- **React Router** for navigation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend
+- **Node.js** with Express.js
+- **MongoDB** with Mongoose ODM
+- **JWT** for authentication
+- **bcrypt** for password hashing
+- **CORS** for cross-origin requests
+- **Express Validator** for input validation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📦 Development Setup
 
-Follow these steps:
+### Prerequisites
+- Node.js 18+
+- MongoDB
+- npm or yarn
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone the repository**
+```bash
+git clone https://github.com/GhadgeRutuja/HealthCare-.git
+cd HealthCare-
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. **Install frontend dependencies**
+```bash
+cd med-sky-appointment
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. **Install backend dependencies**
+```bash
+cd ../backend
+npm install
+```
+
+4. **Start the development servers**
+
+Backend:
+```bash
+cd backend
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Frontend:
+```bash
+cd med-sky-appointment
+npm run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🏗️ Project Structure
 
-**Use GitHub Codespaces**
+The platform includes comprehensive doctor dashboards, patient management, telemedicine capabilities, and administrative controls.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Doctor Dashboard (9 Tabs)
+1. **Overview**: Dashboard with stats and quick actions
+2. **Appointments**: Full scheduling system
+3. **Patients**: Comprehensive patient management
+4. **Prescriptions**: Complete prescription workflow
+5. **Telemedicine**: Virtual consultation platform
+6. **Messages**: Patient communication hub
+7. **Notifications**: Alert management center
+8. **Analytics**: Performance metrics and insights
+9. **Settings**: Professional profile management
 
-## What technologies are used for this project?
+## 📱 Features
 
-This project is built with:
+- Patient registration and appointment booking
+- Doctor dashboard with comprehensive management tools
+- Real-time telemedicine consultations
+- Secure messaging between patients and doctors
+- Prescription management and tracking
+- Medical records and history management
+- Administrative controls and analytics
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📞 Support
 
-## How can I deploy this project?
+For support, please contact the development team or create an issue in the repository.
 
-Simply open [Lovable](https://lovable.dev/projects/582be370-869e-4fda-9118-407b125923c9) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**HealthCare+** - Making healthcare accessible and efficient for everyone.

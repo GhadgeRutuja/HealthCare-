@@ -3,48 +3,55 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sky blue and white medical theme */
+/* Premium Healthcare Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 40% 8%;
+    --background: 210 20% 98%; /* #f4f6f9 light gray */
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 8%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 8%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 214 74% 48%; /* #1e6fd9 vibrant blue */
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 199 89% 96%;
-    --secondary-foreground: 199 89% 15%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 199 89% 92%;
-    --accent-foreground: 199 89% 15%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 48%;
+    --ring: 214 74% 48%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 220 23% 22%; /* #2c3546 dark slate */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 214 74% 48%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-active: 214 74% 48%; /* #1e6fd9 vibrant blue */
+    --sidebar-active-foreground: 210 40% 98%;
+    --sidebar-border: 220 23% 18%;
+    --sidebar-ring: 214 74% 48%;
+
+    /* StrokeAI Accents */
+    --accent-blue: 214 74% 48%; /* #1e6fd9 */
+    --accent-yellow: 45 93% 47%; /* #eab308 */
+    --accent-green: 142 71% 45%; /* #22c55e */
+    --accent-red: 348 83% 47%; /* #e11d48 */
+    --accent-cyan: 199 89% 48%; /* #0ea5e9 */
   }
 
   .dark {
@@ -75,20 +82,90 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+}
+
+/* Premium shadows and effects */
+.shadow-premium {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-premium-lg {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-premium-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shadow-premium-hover:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 /* Custom animations for medical theme */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-12px); }
 }
 
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(14, 165, 233, 0.8);
+  }
 }
 
 .animate-float {
@@ -99,10 +176,59 @@
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Gradient backgrounds */
 .gradient-sky {
   background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
 }
 
 .gradient-sky-light {
   background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+}
+
+.gradient-premium {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.gradient-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+/* Backdrop blur effect */
+.backdrop-blur-premium {
+  backdrop-filter: blur(10px) brightness(1.1);
+}
+
+/* Card styling */
+.card-premium {
+  @apply bg-white rounded-2xl border border-slate-100 p-8 transition-all duration-300;
+}
+
+.card-premium:hover {
+  @apply border-sky-200 shadow-premium-lg;
+  transform: translateY(-4px);
+}
+
+/* Button styling */
+.btn-premium {
+  @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300;
+}
+
+.btn-premium-primary {
+  @apply btn-premium gradient-sky text-white hover:shadow-lg hover:opacity-90;
+}
+
+.btn-premium-outline {
+  @apply btn-premium border-2 border-sky-200 text-sky-700 hover:bg-sky-50 hover:border-sky-300;
 }

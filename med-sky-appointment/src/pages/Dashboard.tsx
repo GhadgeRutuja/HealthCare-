@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { adminApi } from '@/services/api';
 import PatientDashboard from '@/components/dashboard/PatientDashboard-simple';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard-new';
+import AdminAnalytics from '@/components/admin/AdminAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -635,6 +636,8 @@ const AdminDashboard: React.FC = () => {
         return renderDoctors();
       case 'appointments':
         return renderAppointments();
+      case 'analytics':
+        return <AdminAnalytics stats={systemStats} />;
       default:
         return null;
     }
@@ -663,7 +666,7 @@ const AdminDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <nav className="flex space-x-4">
-            {['overview', 'users', 'doctors', 'appointments'].map((tab) => (
+            {['overview', 'analytics', 'users', 'doctors', 'appointments'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

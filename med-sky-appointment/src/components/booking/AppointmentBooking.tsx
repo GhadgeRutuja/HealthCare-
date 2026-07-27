@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, User, Stethoscope, MapPin, CheckCircle } from 'lucide-react';
+import { appointmentsApi, doctorsApi, Doctor } from '@/services/api';
 
 interface AppointmentBookingProps {
   preselectedDoctor?: string | null;
@@ -31,7 +32,10 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   const [symptoms, setSymptoms] = useState('');
   const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
 
-  // Set preselected values when component mounts
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dbDoctors, setDbDoctors] = useState<Doctor[]>([]);
+
+  // Set preselected values and fetch doctors when component mounts
   useEffect(() => {
     if (preselectedDoctor) {
       setSelectedDoctor(preselectedDoctor);
@@ -39,6 +43,20 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     if (preselectedSpecialty) {
       setSelectedDepartment(preselectedSpecialty);
     }
+    
+    // Fetch real doctors
+    const fetchDoctors = async () => {
+      try {
+        const res = await doctorsApi.getAll();
+        if (res.success) {
+          setDbDoctors(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch doctors:", err);
+      }
+    };
+    
+    fetchDoctors();
   }, [preselectedDoctor, preselectedSpecialty]);
 
   const departments = [
@@ -51,13 +69,18 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     'General Medicine'
   ];
 
-  const doctors = [
-    { name: 'Dr. Sarah Johnson', department: 'Cardiology', rating: 4.9 },
-    { name: 'Dr. Michael Chen', department: 'Neurology', rating: 4.8 },
-    { name: 'Dr. Emily Davis', department: 'Pediatrics', rating: 4.9 },
-    { name: 'Dr. James Wilson', department: 'Orthopedics', rating: 4.7 },
-    { name: 'Dr. Lisa Anderson', department: 'Dermatology', rating: 4.8 }
-  ];
+  // We use dbDoctors instead of hardcoded doctors, but keep the hardcoded as fallback for UI if none exist yet
+  const displayDoctors = dbDoctors.length > 0 
+    ? dbDoctors.map(doc => ({ 
+        id: doc._id, 
+        name: `Dr. ${doc.user?.firstName || ''} ${doc.user?.lastName || ''}`, 
+        department: doc.specialties?.[0] || 'General' 
+      }))
+    : [
+        { id: '1', name: 'Dr. Sarah Johnson', department: 'Cardiology' },
+        { id: '2', name: 'Dr. Michael Chen', department: 'Neurology' },
+        { id: '3', name: 'Dr. Emily Davis', department: 'Pediatrics' },
+      ];
 
   const timeSlots = [
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
@@ -65,22 +88,35 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Booking appointment:', {
-      date: selectedDate,
-      time: selectedTime,
-      doctor: selectedDoctor,
-      department: selectedDepartment,
-      patient: { name: patientName, email: patientEmail, phone: patientPhone },
-      symptoms
-    });
+    if (!selectedDate || !selectedTime || !selectedDoctor) return;
     
-    // Show success message
-    setIsBookingConfirmed(true);
-    
-    // In a real app, you would send this data to your backend
-    // For now, we'll just show a success message
+    setIsSubmitting(true);
+    try {
+      // Convert "10:30 AM" to "10:30" or "02:00 PM" to "14:00"
+      const [time, modifier] = selectedTime.split(' ');
+      let [hours, minutes] = time.split(':');
+      if (hours === '12') hours = '00';
+      if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString();
+      const formattedTime = `${hours.padStart(2, '0')}:${minutes}`;
+
+      const res = await appointmentsApi.create({
+        doctor: selectedDoctor, // This is now the doctor's ID
+        appointmentDate: selectedDate.toISOString(),
+        appointmentTime: formattedTime,
+        reason: symptoms || 'General Checkup',
+      });
+      
+      if (res.success) {
+        setIsBookingConfirmed(true);
+      }
+    } catch (err) {
+      console.error("Failed to book appointment", err);
+      alert("Failed to book appointment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -113,7 +149,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                 <div className="space-y-2 text-green-700 mb-6">
                   <p><strong>Date:</strong> {selectedDate ? format(selectedDate, "PPP") : "N/A"}</p>
                   <p><strong>Time:</strong> {selectedTime}</p>
-                  <p><strong>Doctor:</strong> {selectedDoctor}</p>
+                  <p><strong>Doctor:</strong> {displayDoctors.find(d => d.id === selectedDoctor)?.name || selectedDoctor}</p>
                   <p><strong>Department:</strong> {selectedDepartment}</p>
                 </div>
                 <p className="text-gray-600 mb-6">
@@ -226,8 +262,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                             <SelectValue placeholder="Select doctor" />
                           </SelectTrigger>
                           <SelectContent>
-                            {doctors.map((doctor) => (
-                              <SelectItem key={doctor.name} value={doctor.name}>
+                            {displayDoctors.map((doctor) => (
+                              <SelectItem key={doctor.id} value={doctor.id}>
                                 {doctor.name} - {doctor.department}
                               </SelectItem>
                             ))}
@@ -292,8 +328,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full gradient-sky text-white hover:opacity-90 h-12 text-lg">
-                    Book Appointment
+                  <Button type="submit" disabled={isSubmitting} className="w-full gradient-sky text-white hover:opacity-90 h-12 text-lg">
+                    {isSubmitting ? "Booking..." : "Book Appointment"}
                   </Button>
                 </form>
               </CardContent>
@@ -330,7 +366,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                   <User className="h-5 w-5 text-sky-600" />
                   <div>
                     <p className="font-medium">Doctor</p>
-                    <p className="text-sm text-gray-600">{selectedDoctor || "Not selected"}</p>
+                    <p className="text-sm text-gray-600">{displayDoctors.find(d => d.id === selectedDoctor)?.name || "Not selected"}</p>
                   </div>
                 </div>
               </CardContent>

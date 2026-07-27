@@ -144,22 +144,27 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       {/* Hero Section */}
-      <div className="gradient-sky text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Contact Us
+      <div className="gradient-sky text-white py-24 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-6">
+            <h1 className="text-5xl md:text-6xl font-bold">
+              Get in Touch
             </h1>
-            <p className="text-xl text-sky-100 max-w-3xl mx-auto mb-8">
+            <p className="text-xl text-sky-100 max-w-3xl mx-auto leading-relaxed">
               We're here to help! Reach out to us with any questions, concerns, or to schedule an appointment. 
               Our team is available 24/7 for your healthcare needs.
             </p>
-            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-sky-600">
-              <Calendar className="mr-2 h-5 w-5" />
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-sky-600 text-lg px-8 py-6 rounded-xl font-semibold">
+              <Phone className="mr-2 h-5 w-5" />
               Emergency? Call (555) 911-2468
             </Button>
           </div>
@@ -167,56 +172,59 @@ const Contact = () => {
       </div>
 
       {/* Contact Information Cards */}
-      <div className="py-16 bg-white">
+      <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Contact Information</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Multiple ways to reach us</p>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {contactInfo.map((info, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
-                <CardHeader className="text-center pb-4">
-                  <div className={`w-16 h-16 ${info.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
-                    <info.icon className="h-8 w-8" />
-                  </div>
-                  <CardTitle className="text-xl">{info.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center space-y-3">
+              <div key={index} className="card-premium shadow-premium-hover group border-slate-200">
+                <div className={`w-14 h-14 ${info.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+                  <info.icon className="h-7 w-7" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 mb-4">{info.title}</h3>
+                <div className="space-y-4">
                   {info.details.map((detail, idx) => (
-                    <div key={idx}>
-                      <div className="text-sm text-gray-500">{detail.label}</div>
-                      <div className="font-semibold text-gray-900">{detail.value}</div>
+                    <div key={idx} className="space-y-1">
+                      <div className="text-sm text-slate-500 font-medium">{detail.label}</div>
+                      <div className="font-semibold text-slate-900">{detail.value}</div>
                     </div>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Contact Form & Map Section */}
-      <div className="py-16 bg-gray-50">
+      {/* Contact Form & Quick Actions Section */}
+      <div className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Form */}
-            <Card className="p-8">
-              <CardHeader className="p-0 mb-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center mr-4">
-                    <MessageSquare className="h-6 w-6" />
+            <div className="card-premium shadow-premium border-slate-200 p-8 md:p-10">
+              <div className="mb-8">
+                <div className="flex items-center mb-6">
+                  <div className="gradient-sky p-3 rounded-xl mr-4 shadow-lg">
+                    <MessageSquare className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-2xl">Send us a Message</CardTitle>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Send us a Message</h2>
+                    <p className="text-slate-600 mt-1">We'll respond within 24 hours</p>
+                  </div>
                 </div>
-                <p className="text-gray-600">
-                  Fill out the form below and we'll get back to you within 24 hours.
-                </p>
-              </CardHeader>
+              </div>
 
               {isSubmitted ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="h-8 w-8" />
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <CheckCircle className="h-10 w-10" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Message Sent!</h3>
-                  <p className="text-gray-600">
+                  <h3 className="text-2xl font-semibold text-slate-900 mb-3">Message Sent!</h3>
+                  <p className="text-slate-600 text-lg">
                     Thank you for contacting us. We'll respond to your message within 24 hours.
                   </p>
                 </div>
@@ -224,7 +232,7 @@ const Contact = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-900 mb-2">
                         Full Name *
                       </label>
                       <Input
@@ -234,10 +242,11 @@ const Contact = () => {
                         onChange={handleInputChange}
                         required
                         placeholder="Enter your full name"
+                        className="border-slate-200 focus:ring-sky-500 focus:border-sky-500 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-900 mb-2">
                         Email Address *
                       </label>
                       <Input
@@ -247,13 +256,14 @@ const Contact = () => {
                         onChange={handleInputChange}
                         required
                         placeholder="Enter your email"
+                        className="border-slate-200 focus:ring-sky-500 focus:border-sky-500 rounded-lg"
                       />
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-900 mb-2">
                         Phone Number
                       </label>
                       <Input
@@ -262,17 +272,18 @@ const Contact = () => {
                         value={formData.phone}
                         onChange={handleInputChange}
                         placeholder="Enter your phone number"
+                        className="border-slate-200 focus:ring-sky-500 focus:border-sky-500 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-900 mb-2">
                         Department
                       </label>
                       <select
                         name="department"
                         value={formData.department}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-white text-slate-900 font-medium"
                       >
                         {departments.map((dept) => (
                           <option key={dept.value} value={dept.value}>
@@ -284,7 +295,7 @@ const Contact = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-900 mb-2">
                       Subject *
                     </label>
                     <Input
@@ -294,11 +305,12 @@ const Contact = () => {
                       onChange={handleInputChange}
                       required
                       placeholder="Brief description of your inquiry"
+                      className="border-slate-200 focus:ring-sky-500 focus:border-sky-500 rounded-lg"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-900 mb-2">
                       Message *
                     </label>
                     <Textarea
@@ -308,150 +320,142 @@ const Contact = () => {
                       required
                       rows={5}
                       placeholder="Please provide details about your inquiry..."
-                      className="resize-none"
+                      className="resize-none border-slate-200 focus:ring-sky-500 focus:border-sky-500 rounded-lg"
                     />
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full bg-sky-600 hover:bg-sky-700">
+                  <Button type="submit" size="lg" className="w-full gradient-sky text-white hover:shadow-lg hover:shadow-sky-400/50 text-lg py-6 rounded-lg font-semibold">
                     <Send className="mr-2 h-5 w-5" />
                     Send Message
                   </Button>
                 </form>
               )}
-            </Card>
+            </div>
 
             {/* Quick Actions */}
             <div className="space-y-6">
-              <Card className="p-6">
-                <CardHeader className="p-0 mb-6">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mr-4">
-                      <HeadphonesIcon className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="text-xl">Need Immediate Help?</CardTitle>
+              <div className="card-premium shadow-premium border-slate-200 p-8">
+                <div className="flex items-center mb-6">
+                  <div className="gradient-sky p-3 rounded-xl mr-4 shadow-lg">
+                    <HeadphonesIcon className="h-6 w-6 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent className="p-0 space-y-4">
-                  <Button size="lg" className="w-full bg-red-600 hover:bg-red-700">
+                  <h3 className="text-xl font-semibold text-slate-900">Need Immediate Help?</h3>
+                </div>
+                <div className="space-y-3">
+                  <Button size="lg" className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white hover:shadow-lg hover:shadow-red-500/50 text-lg py-6 rounded-lg font-semibold">
                     <Phone className="mr-2 h-5 w-5" />
                     Emergency: (555) 911-2468
                   </Button>
-                  <Button size="lg" variant="outline" className="w-full">
+                  <Button size="lg" variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 text-lg py-6 rounded-lg font-semibold">
                     <Phone className="mr-2 h-5 w-5" />
                     General: (555) 123-4567
                   </Button>
-                  <Button size="lg" variant="outline" className="w-full">
+                  <Button size="lg" variant="outline" className="w-full border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 text-lg py-6 rounded-lg font-semibold">
                     <Calendar className="mr-2 h-5 w-5" />
                     Book Appointment
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="p-6">
-                <CardHeader className="p-0 mb-6">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mr-4">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="text-xl">Patient Resources</CardTitle>
+              <div className="card-premium shadow-premium border-slate-200 p-8">
+                <div className="flex items-center mb-6">
+                  <div className="gradient-sky p-3 rounded-xl mr-4 shadow-lg">
+                    <Users className="h-6 w-6 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <Shield className="h-4 w-4 mr-2 text-green-500" />
-                      Patient Privacy & Rights
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Shield className="h-4 w-4 mr-2 text-green-500" />
-                      Insurance & Billing Information
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Shield className="h-4 w-4 mr-2 text-green-500" />
-                      Medical Records Request
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Shield className="h-4 w-4 mr-2 text-green-500" />
-                      Patient Portal Access
-                    </div>
+                  <h3 className="text-xl font-semibold text-slate-900">Patient Resources</h3>
+                </div>
+                <div className="space-y-4 text-sm">
+                  <div className="flex items-center text-slate-700 hover:text-sky-600 transition-colors cursor-pointer font-medium">
+                    <CheckCircle className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
+                    Patient Privacy & Rights
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center text-slate-700 hover:text-sky-600 transition-colors cursor-pointer font-medium">
+                    <CheckCircle className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
+                    Insurance & Billing Information
+                  </div>
+                  <div className="flex items-center text-slate-700 hover:text-sky-600 transition-colors cursor-pointer font-medium">
+                    <CheckCircle className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
+                    Medical Records Request
+                  </div>
+                  <div className="flex items-center text-slate-700 hover:text-sky-600 transition-colors cursor-pointer font-medium">
+                    <CheckCircle className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
+                    Patient Portal Access
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Locations Section */}
-      <div className="py-16 bg-white">
+      <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Locations</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Multiple convenient locations to serve you better. Find the nearest center to you.
-            </p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Our Locations</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Multiple convenient locations to serve you better. Find the nearest center to you.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {locations.map((location, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center mb-2">
-                    <Building className="h-5 w-5 text-sky-600 mr-2" />
-                    <CardTitle className="text-lg">{location.name}</CardTitle>
+              <div key={index} className="card-premium shadow-premium-hover group border-slate-200">
+                <div className="flex items-center mb-6">
+                  <div className="gradient-sky p-2.5 rounded-lg mr-3 shadow-md">
+                    <Building className="h-5 w-5 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-1 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{location.address}</p>
+                  <h3 className="text-lg font-semibold text-slate-900">{location.name}</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="h-5 w-5 text-sky-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-slate-600 leading-relaxed">{location.address}</p>
                   </div>
-                  <div className="flex items-center">
-                    <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-sm text-gray-600">{location.phone}</p>
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-5 w-5 text-sky-600 flex-shrink-0" />
+                    <p className="text-sm text-slate-600 font-medium">{location.phone}</p>
                   </div>
-                  <div className="flex items-start">
-                    <Clock className="h-4 w-4 text-gray-400 mr-2 mt-1 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{location.hours}</p>
+                  <div className="flex items-start space-x-3">
+                    <Clock className="h-5 w-5 text-sky-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-slate-600">{location.hours}</p>
                   </div>
-                  <div className="pt-2">
-                    <p className="text-xs text-gray-500 font-medium mb-2">Services:</p>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="pt-4 space-y-3">
+                    <p className="text-xs text-slate-600 font-semibold uppercase tracking-wider">Services:</p>
+                    <div className="flex flex-wrap gap-2">
                       {location.services.map((service, idx) => (
                         <span 
                           key={idx}
-                          className="text-xs bg-sky-50 text-sky-700 px-2 py-1 rounded"
+                          className="text-xs bg-gradient-to-r from-sky-100 to-blue-100 text-sky-700 px-3 py-1.5 rounded-full font-semibold"
                         >
                           {service}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full mt-4">
+                  <Button variant="outline" size="sm" className="w-full mt-6 border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-sky-300 font-semibold rounded-lg">
                     <Navigation className="mr-2 h-4 w-4" />
                     Get Directions
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
       {/* Map Section */}
-      <div className="py-16 bg-gray-50">
+      <div className="py-24 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Us</h2>
-            <p className="text-lg text-gray-600">Main Medical Center Location</p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Find Us</h2>
+            <p className="text-lg text-slate-600">Main Medical Center Location</p>
           </div>
           
           {/* Placeholder for map - you would integrate with Google Maps or similar */}
-          <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Interactive Map</p>
-              <p className="text-sm text-gray-400">123 Healthcare Blvd, Medical City, MC 12345</p>
+          <div className="bg-gradient-to-br from-slate-200 to-slate-300 rounded-2xl h-96 flex items-center justify-center shadow-premium border border-slate-200">
+            <div className="text-center space-y-4">
+              <MapPin className="h-20 w-20 text-slate-400 mx-auto" />
+              <p className="text-slate-600 font-semibold text-lg">Interactive Map</p>
+              <p className="text-slate-500">123 Healthcare Blvd, Medical City, MC 12345</p>
             </div>
           </div>
         </div>

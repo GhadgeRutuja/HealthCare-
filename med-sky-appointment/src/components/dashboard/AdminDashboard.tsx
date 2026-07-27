@@ -19,7 +19,11 @@ import {
   FileText,
   Eye,
   Plus,
-  Edit
+  Edit,
+  Sparkles,
+  TrendingUp,
+  ShieldCheck,
+  Building2
 } from 'lucide-react';
 import { User as UserType } from '@/services/api';
 
@@ -104,82 +108,122 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Manage your healthcare platform
-        </p>
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_26%),linear-gradient(180deg,_#f8fcff_0%,_#eef7fb_42%,_#f9fbfd_100%)] px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
+        <div className="absolute right-0 top-36 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.totalUsers.toLocaleString()}</p>
+      <div className="relative mx-auto max-w-7xl space-y-6 sm:space-y-8">
+        {/* Header */}
+        <div className="rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                <Sparkles className="h-3.5 w-3.5" />
+                Executive Control Center
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
+                  Admin Dashboard
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">
+                  Manage your healthcare platform
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1.5 text-white shadow-lg shadow-slate-900/10">
+                  <ShieldCheck className="h-4 w-4 text-cyan-300" />
+                  Secure admin access
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700">
+                  <TrendingUp className="h-4 w-4" />
+                  Live platform analytics
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserCheck className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Doctors</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.totalDoctors}</p>
+            <Button className="rounded-full border-0 bg-gradient-to-r from-sky-600 via-cyan-600 to-emerald-500 text-white shadow-lg shadow-sky-600/25 transition-transform hover:scale-[1.02] hover:from-sky-500 hover:via-cyan-500 hover:to-emerald-400">
+              <Building2 className="h-4 w-4 mr-2" />
+              Platform Overview
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="overflow-hidden border-sky-100 bg-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(14,165,233,0.16)]">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-400 p-3 text-white shadow-lg shadow-sky-500/25">
+                  <Users className="h-7 w-7" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Total Users</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">{systemStats.totalUsers.toLocaleString()}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Appointments</p>
-                <p className="text-2xl font-bold text-gray-900">{systemStats.totalAppointments.toLocaleString()}</p>
+          <Card className="overflow-hidden border-emerald-100 bg-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(16,185,129,0.16)]">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 p-3 text-white shadow-lg shadow-emerald-500/25">
+                  <UserCheck className="h-7 w-7" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Doctors</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">{systemStats.totalDoctors}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${(systemStats.monthlyRevenue / 1000).toFixed(0)}K</p>
+          <Card className="overflow-hidden border-violet-100 bg-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(139,92,246,0.16)]">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-400 p-3 text-white shadow-lg shadow-violet-500/25">
+                  <Calendar className="h-7 w-7" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Appointments</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">{systemStats.totalAppointments.toLocaleString()}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Card className="overflow-hidden border-amber-100 bg-white/80 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(245,158,11,0.16)]">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-400 p-3 text-white shadow-lg shadow-amber-500/25">
+                  <DollarSign className="h-7 w-7" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Monthly Revenue</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">${(systemStats.monthlyRevenue / 1000).toFixed(0)}K</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Pending Approvals */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100/80 bg-gradient-to-r from-sky-50 via-white to-emerald-50/70">
+              <CardTitle className="flex items-center gap-2 text-slate-950">
+                <Clock className="h-5 w-5 text-sky-600" />
                 Pending Approvals
                 {systemStats.pendingApprovals > 0 && (
                   <Badge variant="destructive">{systemStats.pendingApprovals}</Badge>
                 )}
               </CardTitle>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="rounded-full border-sky-200 bg-white/90 text-slate-700 hover:bg-sky-50">
                 <Eye className="h-4 w-4 mr-2" />
                 View All
               </Button>
@@ -187,7 +231,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             <CardContent>
               <div className="space-y-4">
                 {recentRegistrations.filter(reg => reg.status === 'pending').map((registration) => (
-                  <div key={registration.id} className="border rounded-lg p-4">
+                  <div key={registration.id} className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_12px_32px_rgba(14,165,233,0.1)]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <Avatar>
@@ -206,10 +250,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="rounded-full border-slate-200">
                           Reject
                         </Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        <Button size="sm" className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400">
                           Approve
                         </Button>
                       </div>
@@ -221,10 +265,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           </Card>
 
           {/* Recent Registrations */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Registrations</CardTitle>
-              <Button variant="outline" size="sm">
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100/80 bg-gradient-to-r from-slate-50 via-white to-sky-50/70">
+              <CardTitle className="text-slate-950">Recent Registrations</CardTitle>
+              <Button variant="outline" size="sm" className="rounded-full border-sky-200 bg-white/90 text-slate-700 hover:bg-sky-50">
                 <Eye className="h-4 w-4 mr-2" />
                 View All
               </Button>
@@ -232,7 +276,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             <CardContent>
               <div className="space-y-4">
                 {recentRegistrations.map((registration) => (
-                  <div key={registration.id} className="border rounded-lg p-4">
+                  <div key={registration.id} className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_12px_32px_rgba(14,165,233,0.1)]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <Avatar>
@@ -254,7 +298,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         <Badge className={getStatusColor(registration.status)}>
                           {registration.status}
                         </Badge>
-                        <Button size="sm" variant="outline" className="mt-2">
+                        <Button size="sm" variant="outline" className="mt-2 rounded-full border-sky-200 bg-white/90 hover:bg-sky-50">
                           View Details
                         </Button>
                       </div>
@@ -266,10 +310,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           </Card>
 
           {/* System Analytics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-emerald-50/80 via-white to-cyan-50/80">
+              <CardTitle className="flex items-center gap-2 text-slate-950">
+                <BarChart3 className="h-5 w-5 text-emerald-600" />
                 System Analytics
               </CardTitle>
             </CardHeader>
@@ -299,13 +343,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {/* Right Column */}
         <div className="space-y-8">
           {/* Admin Profile */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Profile</CardTitle>
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-slate-50 via-white to-sky-50/70">
+              <CardTitle className="text-slate-950">Admin Profile</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center mb-6">
-                <Avatar className="w-20 h-20 mx-auto mb-4">
+                <Avatar className="w-20 h-20 mx-auto mb-4 ring-4 ring-sky-100 shadow-lg shadow-sky-500/10">
                   <AvatarImage src={user.profileImage || '/placeholder.svg'} />
                   <AvatarFallback>
                     {user.firstName[0]}{user.lastName[0]}
@@ -334,7 +378,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </div>
               </div>
               
-              <Button variant="outline" className="w-full mt-6">
+              <Button variant="outline" className="w-full mt-6 rounded-full border-sky-200 bg-white/90 hover:bg-sky-50">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
@@ -342,14 +386,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           </Card>
 
           {/* System Alerts */}
-          <Card>
-            <CardHeader>
-              <CardTitle>System Alerts</CardTitle>
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-amber-50/80 via-white to-sky-50/70">
+              <CardTitle className="text-slate-950">System Alerts</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {systemAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
+                  <div key={alert.id} className="flex items-start space-x-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-sm">
                     {getAlertIcon(alert.type)}
                     <div className="flex-1">
                       <p className="text-sm font-medium">{alert.message}</p>
@@ -358,40 +402,40 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-4">
+              <Button variant="outline" className="mt-4 w-full rounded-full border-sky-200 bg-white/90 hover:bg-sky-50">
                 View All Alerts
               </Button>
             </CardContent>
           </Card>
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-cyan-50/80 via-white to-emerald-50/70">
+              <CardTitle className="text-slate-950">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-sky-200 hover:bg-sky-50">
                   <Users className="h-4 w-4 mr-2" />
                   Manage Users
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-emerald-200 hover:bg-emerald-50">
                   <UserCheck className="h-4 w-4 mr-2" />
                   Doctor Approvals
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-violet-200 hover:bg-violet-50">
                   <FileText className="h-4 w-4 mr-2" />
                   Generate Reports
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-sky-200 hover:bg-sky-50">
                   <Settings className="h-4 w-4 mr-2" />
                   System Settings
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-amber-200 hover:bg-amber-50">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start rounded-2xl border-slate-200/80 bg-white/90 shadow-sm hover:border-rose-200 hover:bg-rose-50">
                   <Shield className="h-4 w-4 mr-2" />
                   Security Logs
                 </Button>
@@ -400,9 +444,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           </Card>
 
           {/* System Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
+          <Card className="overflow-hidden border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100/80 bg-gradient-to-r from-slate-50 via-white to-cyan-50/70">
+              <CardTitle className="text-slate-950">System Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
