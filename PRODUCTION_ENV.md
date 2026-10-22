@@ -6,7 +6,7 @@
 NODE_ENV=production
 MONGODB_URI=<set-in-render>
 JWT_SECRET=<generate-a-long-random-secret>
-CORS_ORIGIN=<frontend-production-url>
+CORS_ORIGIN=https://health-care-nu-eight.vercel.app
 
 ## Additional Backend Variables
 PORT=10000
