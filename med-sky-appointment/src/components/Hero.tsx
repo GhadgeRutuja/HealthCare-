@@ -1,133 +1,101 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Star, ArrowRight, CheckCircle2, Zap } from 'lucide-react';
+import { Calendar, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-sky-50 to-purple-50/30">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-sky-300 to-indigo-300 rounded-full opacity-[0.15] blur-[100px]"></div>
-        <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-emerald-200 to-cyan-300 rounded-full opacity-[0.15] blur-[100px]"></div>
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-r from-purple-200 via-pink-200 to-orange-200 rounded-full opacity-[0.15] blur-[100px]"></div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+    <section className="relative bg-slate-50 pt-2 pb-12 lg:pt-4 lg:pb-20 overflow-hidden selection:bg-blue-100 selection:text-blue-900">
+      {/* Subtle dotted pattern overlay for texture */}
+      <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          
           {/* Left Content */}
-          <div className="space-y-8 animate-slide-up">
-            {/* Badge */}
-            <div className="inline-flex items-center space-x-2 bg-sky-100/60 backdrop-blur-sm border border-sky-200 px-4 py-2 rounded-full w-fit">
-              <Zap className="h-4 w-4 text-sky-600" />
-              <span className="text-sm font-semibold text-sky-700">Trusted by 50,000+ Patients</span>
+          <div className="space-y-10">
+            <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm text-blue-700 px-4 py-2 rounded-full border border-blue-100 shadow-sm transition-transform hover:-translate-y-0.5 duration-300 cursor-default">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+              </span>
+              <span className="text-sm font-semibold tracking-wide">Accepting New Patients</span>
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-tight">
-                Your Health,
-                <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent block">Our Priority</span>
+              <h1 className="text-5xl md:text-6xl lg:text-[4rem] font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+                Exceptional care, <br/>
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">when you need it most.</span>
               </h1>
-              <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-xl">
-                Book appointments with world-class doctors instantly. Experience healthcare 
-                that puts you first with easy scheduling, quality care, and 24/7 support.
+              <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-lg font-light tracking-wide">
+                Connect with leading medical specialists, schedule appointments seamlessly, and manage your health journey in one intuitive platform.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button size="lg" asChild className="gradient-sky text-white hover:shadow-lg hover:shadow-sky-400/50 text-lg px-8 py-6 rounded-xl font-semibold">
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <Button size="lg" asChild className="group bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-7 rounded-2xl font-medium transition-all duration-300 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-0.5">
                 <Link to="/book-appointment" className="flex items-center">
-                  Book Appointment
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Book an Appointment
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8 py-6 rounded-xl border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-semibold">
+              <Button size="lg" variant="outline" asChild className="text-lg px-8 py-7 rounded-2xl border-slate-200 bg-white/50 backdrop-blur-sm text-slate-700 hover:bg-white hover:border-slate-300 font-medium transition-all duration-300 hover:-translate-y-0.5 shadow-sm hover:shadow-md">
                 <Link to="/doctors">
-                  Find Doctors
+                  Find a Doctor
                 </Link>
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200">
-              <div className="space-y-2">
-                <div className="flex items-baseline space-x-1">
-                  <div className="text-4xl font-bold bg-gradient-to-br from-sky-600 to-blue-600 bg-clip-text text-transparent">500+</div>
+            {/* Features list */}
+            <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 pt-8 border-t border-slate-200/60">
+              <div className="flex items-center space-x-4 group cursor-default">
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 group-hover:bg-emerald-100 group-hover:scale-105 transition-all duration-300 shadow-sm">
+                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
                 </div>
-                <div className="text-sm text-slate-600 font-medium">Expert Doctors</div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-baseline space-x-1">
-                  <div className="text-4xl font-bold bg-gradient-to-br from-sky-600 to-blue-600 bg-clip-text text-transparent">50k+</div>
-                </div>
-                <div className="text-sm text-slate-600 font-medium">Happy Patients</div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-baseline space-x-1">
-                  <div className="text-4xl font-bold bg-gradient-to-br from-sky-600 to-blue-600 bg-clip-text text-transparent">24/7</div>
-                </div>
-                <div className="text-sm text-slate-600 font-medium">Support</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Content - Feature Cards */}
-          <div className="relative">
-            <div className="grid gap-6">
-              {/* Quick Booking Card */}
-              <div className="card-premium shadow-premium-hover group">
-                <div className="flex items-start space-x-4">
-                  <div className="gradient-sky p-3.5 rounded-xl shadow-lg group-hover:shadow-lg transition-all duration-300">
-                    <Calendar className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 mb-1.5 text-lg">Quick Booking</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">Schedule appointments in under 2 minutes with our streamlined process.</p>
-                  </div>
+                <div className="flex flex-col">
+                  <span className="text-slate-900 font-semibold">Verified</span>
+                  <span className="text-slate-500 text-sm font-medium">Specialists</span>
                 </div>
               </div>
-
-              {/* Instant Confirmation Card */}
-              <div className="card-premium shadow-premium-hover group" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-start space-x-4">
-                  <div className="gradient-sky p-3.5 rounded-xl shadow-lg group-hover:shadow-lg transition-all duration-300">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 mb-1.5 text-lg">Instant Confirmation</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">Get immediate booking confirmation with automated reminders.</p>
-                  </div>
+              <div className="flex items-center space-x-4 group cursor-default">
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 group-hover:bg-blue-100 group-hover:scale-105 transition-all duration-300 shadow-sm">
+                  <Calendar className="h-6 w-6 text-blue-600" />
                 </div>
-              </div>
-
-              {/* Multiple Locations Card */}
-              <div className="card-premium shadow-premium-hover group" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-start space-x-4">
-                  <div className="gradient-sky p-3.5 rounded-xl shadow-lg group-hover:shadow-lg transition-all duration-300">
-                    <MapPin className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 mb-1.5 text-lg">Multiple Locations</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">Find healthcare providers near you across multiple locations.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verified Rating Card */}
-              <div className="card-premium shadow-premium-hover group" style={{ animationDelay: '0.3s' }}>
-                <div className="flex items-start space-x-4">
-                  <div className="gradient-sky p-3.5 rounded-xl shadow-lg group-hover:shadow-lg transition-all duration-300">
-                    <Star className="h-6 w-6 text-white fill-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 mb-1.5 text-lg">Highly Rated</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">4.9/5 rating from thousands of verified patients.</p>
-                  </div>
+                <div className="flex flex-col">
+                  <span className="text-slate-900 font-semibold">Same-day</span>
+                  <span className="text-slate-500 text-sm font-medium">Booking</span>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Right Content - Image Grid */}
+          <div className="relative lg:h-[650px] flex items-center justify-center mt-12 lg:mt-0">
+            {/* Soft decorative background shape */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-gradient-to-tr from-blue-100/40 to-indigo-50/40 rounded-full blur-3xl -z-10 transition-all duration-1000 animate-pulse-soft"></div>
+            
+            <div className="relative w-full max-w-md lg:max-w-xl mx-auto group">
+              <div className="rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-300/60 border-8 border-white bg-white transition-transform duration-700 group-hover:scale-[1.02]">
+                <img 
+                  src="/assets/clinic.png" 
+                  alt="Modern medical facility" 
+                  className="w-full h-[450px] lg:h-[550px] object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              
+              {/* Floating card for depth */}
+              <div className="absolute -bottom-8 -left-6 md:-left-12 bg-white/90 backdrop-blur-xl p-5 md:p-6 rounded-2xl shadow-2xl shadow-slate-200/80 border border-white flex items-center space-x-5 animate-float hover:scale-105 transition-transform duration-300 cursor-default">
+                <div className="bg-orange-50 p-3.5 rounded-2xl border border-orange-100 shadow-inner">
+                  <MapPin className="h-6 w-6 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-slate-500 font-medium uppercase tracking-wider mb-0.5">Locations</p>
+                  <p className="text-base md:text-lg font-bold text-slate-900">Find a clinic near you</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
     </section>

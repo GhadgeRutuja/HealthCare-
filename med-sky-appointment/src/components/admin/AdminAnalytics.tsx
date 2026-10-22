@@ -29,41 +29,42 @@ const AdminAnalytics: React.FC<AnalyticsProps> = ({ stats }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-2">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Area Chart */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden bg-white/80 backdrop-blur-xl">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+        <Card className="glass-card overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-4 relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Revenue Growth</CardTitle>
-                <CardDescription>Monthly consultation fees</CardDescription>
+                <CardTitle className="text-lg font-extrabold text-slate-800 tracking-tight">Revenue Growth</CardTitle>
+                <CardDescription className="text-slate-500 font-medium">Monthly consultation fees</CardDescription>
               </div>
-              <div className="h-10 w-10 rounded-full bg-sky-100 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-sky-600" />
+              <div className="h-10 w-10 rounded-xl bg-white shadow-md shadow-blue-500/10 flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="h-5 w-5 text-blue-500" />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative z-10">
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats.revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 500}} dy={10} />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{fill: '#64748b', fontSize: 12}}
+                    tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 500}}
                     tickFormatter={(value) => `$${value}`}
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)' }}
                     formatter={(value: number) => [`$${value}`, 'Revenue']}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="#0ea5e9" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -71,30 +72,31 @@ const AdminAnalytics: React.FC<AnalyticsProps> = ({ stats }) => {
         </Card>
 
         {/* Appointments Bar Chart */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden bg-white/80 backdrop-blur-xl">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+        <Card className="glass-card overflow-hidden group stagger-1">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-4 relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Appointment Trends</CardTitle>
-                <CardDescription>Daily bookings over last 7 days</CardDescription>
+                <CardTitle className="text-lg font-extrabold text-slate-800 tracking-tight">Appointment Trends</CardTitle>
+                <CardDescription className="text-slate-500 font-medium">Daily bookings over last 7 days</CardDescription>
               </div>
-              <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                <CalendarIcon className="h-5 w-5 text-emerald-600" />
+              <div className="h-10 w-10 rounded-xl bg-white shadow-md shadow-emerald-500/10 flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                <CalendarIcon className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative z-10">
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.appointmentTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 500}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 500}} />
                   <Tooltip
-                    cursor={{fill: '#f1f5f9'}}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    cursor={{fill: 'rgba(241,245,249,0.5)'}}
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)' }}
                   />
-                  <Bar dataKey="appointments" fill="#10b981" radius={[4, 4, 0, 0]} barSize={32} />
+                  <Bar dataKey="appointments" fill="#10b981" radius={[6, 6, 0, 0]} barSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -104,19 +106,20 @@ const AdminAnalytics: React.FC<AnalyticsProps> = ({ stats }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Department Breakdown */}
-        <Card className="lg:col-span-1 border-slate-200 shadow-sm overflow-hidden bg-white/80 backdrop-blur-xl">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+        <Card className="lg:col-span-1 glass-card overflow-hidden group stagger-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-4 relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Specializations</CardTitle>
-                <CardDescription>Doctor distribution</CardDescription>
+                <CardTitle className="text-lg font-extrabold text-slate-800 tracking-tight">Specializations</CardTitle>
+                <CardDescription className="text-slate-500 font-medium">Doctor distribution</CardDescription>
               </div>
-              <div className="h-10 w-10 rounded-full bg-violet-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-violet-600" />
+              <div className="h-10 w-10 rounded-xl bg-white shadow-md shadow-violet-500/10 flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                <Users className="h-5 w-5 text-violet-500" />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative z-10">
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -124,31 +127,32 @@ const AdminAnalytics: React.FC<AnalyticsProps> = ({ stats }) => {
                     data={stats.departmentBreakdown}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={8}
                     dataKey="value"
+                    stroke="none"
                   >
                     {stats.departmentBreakdown?.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             
             {/* Custom Legend */}
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               {stats.departmentBreakdown?.map((entry: any, index: number) => (
                 <div key={index} className="flex items-center text-sm">
                   <span 
-                    className="h-3 w-3 rounded-full mr-2" 
+                    className="h-3 w-3 rounded-full mr-2.5 shadow-sm" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-slate-600 truncate">{entry.name} ({entry.value})</span>
+                  <span className="text-slate-700 font-medium truncate">{entry.name} <span className="text-slate-400">({entry.value})</span></span>
                 </div>
               ))}
             </div>
@@ -156,36 +160,40 @@ const AdminAnalytics: React.FC<AnalyticsProps> = ({ stats }) => {
         </Card>
 
         {/* Quick Stats Summary */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-          <Card className="border-sky-100 bg-gradient-to-br from-sky-50 to-white shadow-sm flex flex-col justify-center">
-            <CardContent className="p-8">
-              <p className="text-sky-600 font-medium mb-1">Total System Users</p>
-              <h3 className="text-4xl font-bold text-sky-950">{stats.totalUsers}</h3>
-              <p className="text-sm text-sky-600/80 mt-2">+12% from last month</p>
+        <div className="lg:col-span-2 grid grid-cols-2 gap-6 stagger-3">
+          <Card className="glass-card bg-gradient-to-br from-blue-50/50 to-white/50 border-blue-100 flex flex-col justify-center overflow-hidden group">
+            <div className="absolute inset-0 bg-blue-500/5 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
+            <CardContent className="p-8 relative z-10">
+              <p className="text-blue-600 font-bold tracking-widest text-xs uppercase mb-2">Total System Users</p>
+              <h3 className="text-5xl font-extrabold text-slate-800 tracking-tight">{stats.totalUsers}</h3>
+              <p className="text-sm text-slate-500 font-medium mt-3 flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-emerald-500"/> +12% from last month</p>
             </CardContent>
           </Card>
           
-          <Card className="border-emerald-100 bg-gradient-to-br from-emerald-50 to-white shadow-sm flex flex-col justify-center">
-            <CardContent className="p-8">
-              <p className="text-emerald-600 font-medium mb-1">Total Verified Doctors</p>
-              <h3 className="text-4xl font-bold text-emerald-950">{stats.verifiedDoctors}</h3>
-              <p className="text-sm text-emerald-600/80 mt-2">Active practitioners</p>
+          <Card className="glass-card bg-gradient-to-br from-emerald-50/50 to-white/50 border-emerald-100 flex flex-col justify-center overflow-hidden group">
+            <div className="absolute inset-0 bg-emerald-500/5 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
+            <CardContent className="p-8 relative z-10">
+              <p className="text-emerald-600 font-bold tracking-widest text-xs uppercase mb-2">Total Verified Doctors</p>
+              <h3 className="text-5xl font-extrabold text-slate-800 tracking-tight">{stats.verifiedDoctors}</h3>
+              <p className="text-sm text-slate-500 font-medium mt-3">Active practitioners</p>
             </CardContent>
           </Card>
           
-          <Card className="border-violet-100 bg-gradient-to-br from-violet-50 to-white shadow-sm flex flex-col justify-center">
-            <CardContent className="p-8">
-              <p className="text-violet-600 font-medium mb-1">Total Appointments</p>
-              <h3 className="text-4xl font-bold text-violet-950">{stats.totalAppointments}</h3>
-              <p className="text-sm text-violet-600/80 mt-2">All time bookings</p>
+          <Card className="glass-card bg-gradient-to-br from-violet-50/50 to-white/50 border-violet-100 flex flex-col justify-center overflow-hidden group">
+            <div className="absolute inset-0 bg-violet-500/5 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
+            <CardContent className="p-8 relative z-10">
+              <p className="text-violet-600 font-bold tracking-widest text-xs uppercase mb-2">Total Appointments</p>
+              <h3 className="text-5xl font-extrabold text-slate-800 tracking-tight">{stats.totalAppointments}</h3>
+              <p className="text-sm text-slate-500 font-medium mt-3">All time bookings</p>
             </CardContent>
           </Card>
           
-          <Card className="border-amber-100 bg-gradient-to-br from-amber-50 to-white shadow-sm flex flex-col justify-center">
-            <CardContent className="p-8">
-              <p className="text-amber-600 font-medium mb-1">Monthly Revenue</p>
-              <h3 className="text-4xl font-bold text-amber-950">${stats.totalRevenue || 5000}</h3>
-              <p className="text-sm text-amber-600/80 mt-2">From consultation fees</p>
+          <Card className="glass-card bg-gradient-to-br from-amber-50/50 to-white/50 border-amber-100 flex flex-col justify-center overflow-hidden group">
+            <div className="absolute inset-0 bg-amber-500/5 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
+            <CardContent className="p-8 relative z-10">
+              <p className="text-amber-600 font-bold tracking-widest text-xs uppercase mb-2">Monthly Revenue</p>
+              <h3 className="text-5xl font-extrabold text-slate-800 tracking-tight">${stats.totalRevenue ?? 0}</h3>
+              <p className="text-sm text-slate-500 font-medium mt-3 flex items-center gap-1.5"><TrendingUp className="h-4 w-4 text-emerald-500"/> From consultation fees</p>
             </CardContent>
           </Card>
         </div>

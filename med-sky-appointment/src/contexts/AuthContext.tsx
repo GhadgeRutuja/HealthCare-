@@ -24,7 +24,7 @@ interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  role: 'patient' | 'doctor' | 'admin';
+  role: 'patient' | 'doctor';
   dateOfBirth?: string;
   gender?: string;
   address?: {

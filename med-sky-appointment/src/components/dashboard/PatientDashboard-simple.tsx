@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +54,7 @@ interface Appointment {
   doctor: string;
   specialty: string;
   type: 'consultation' | 'follow-up' | 'emergency';
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show' | 'rescheduled';
 }
 
 interface Prescription {
@@ -180,7 +181,9 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
     }
   };
 
-  const upcomingAppointments = appointments.filter(apt => apt.status === 'scheduled').slice(0, 3);
+  const upcomingAppointments = appointments
+    .filter(apt => ['scheduled', 'confirmed', 'in-progress', 'rescheduled'].includes(apt.status))
+    .slice(0, 3);
   const activePrescriptions = prescriptions.filter(rx => rx.status === 'active').slice(0, 3);
   const recentRecords = medicalRecords.slice(0, 3);
 
@@ -196,14 +199,15 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_26%),linear-gradient(180deg,_#f8fcff_0%,_#eef7fb_42%,_#f9fbfd_100%)] px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.14),_transparent_26%),linear-gradient(180deg,_#f8fcff_0%,_#eef7fb_42%,_#f9fbfd_100%)] flex flex-col">
+      <Navbar />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
         <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
         <div className="absolute right-0 top-36 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-cyan-300/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-6 sm:space-y-8">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-6 sm:space-y-8 px-4 py-8 sm:px-6 lg:px-8 w-full">
         <div className="rounded-[2rem] border border-white/70 bg-white/75 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -336,11 +340,16 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                               </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                              <Badge 
-                                variant={appointment.type === 'emergency' ? 'destructive' : 'secondary'}
-                              >
-                                {appointment.type}
-                              </Badge>
+                              <div className="flex gap-2">
+                                <Badge 
+                                  variant={appointment.type === 'emergency' ? 'destructive' : 'secondary'}
+                                >
+                                  {appointment.type}
+                                </Badge>
+                                <Badge className={appointment.status === 'confirmed' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-0'}>
+                                  {appointment.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                                </Badge>
+                              </div>
                               <Button 
                                 size="sm" 
                                 className="bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-500/20 rounded-full px-4"
@@ -439,7 +448,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                   <div className="space-y-3 pt-4 border-t">
                     <div className="flex items-center space-x-2">
                       <Phone className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">+1 (555) 123-4567</span>
+                      <span className="text-sm text-gray-600">{user.phone || 'Phone not provided'}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-gray-400" />
@@ -447,7 +456,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <MapPin className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">New York, NY</span>
+                      <span className="text-sm text-gray-600">
+                        {[
+                          user.address?.street,
+                          user.address?.city,
+                          user.address?.state,
+                          user.address?.zipCode
+                        ].filter(Boolean).join(', ') || 'Address not provided'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -547,14 +563,40 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ user }) => {
               <CardTitle className="text-slate-950">All Appointments</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">No appointments scheduled</p>
-                <Button onClick={() => navigate('/book-appointment')}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Book New Appointment
-                </Button>
-              </div>
+              {appointments.length > 0 ? (
+                <div className="space-y-4">
+                  {appointments.map((appointment) => (
+                    <div key={appointment.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-medium text-slate-900">Dr. {appointment.doctor}</p>
+                        <p className="text-sm text-slate-600">{appointment.specialty}</p>
+                        <div className="mt-1 flex items-center gap-4 text-sm text-slate-500">
+                          <span className="flex items-center">
+                            <Calendar className="mr-1 h-3 w-3" />
+                            {appointment.date}
+                          </span>
+                          <span className="flex items-center">
+                            <Clock className="mr-1 h-3 w-3" />
+                            {appointment.time}
+                          </span>
+                        </div>
+                      </div>
+                      <Badge variant={appointment.status === 'cancelled' ? 'destructive' : 'secondary'} className="w-fit capitalize">
+                        {appointment.status.replace('-', ' ')}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <Calendar className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+                  <p className="mb-4 text-gray-600">No appointments scheduled</p>
+                  <Button onClick={() => navigate('/book-appointment')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Book New Appointment
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

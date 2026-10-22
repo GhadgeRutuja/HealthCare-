@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,14 +5,17 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Mail, 
   Lock, 
   Eye, 
-  EyeOff
+  EyeOff,
+  User,
+  Stethoscope,
+  Shield,
+  Activity
 } from 'lucide-react';
 
 const Login = () => {
@@ -42,7 +44,7 @@ const Login = () => {
       return {
         title: 'Sign in to your account',
         subtitle: 'Welcome back! Please sign in to continue.',
-        icon: '🏥'
+        icon: <Activity className="w-10 h-10 text-sky-500" />
       };
     }
     
@@ -51,25 +53,25 @@ const Login = () => {
         return {
           title: 'Patient Login',
           subtitle: 'Access your health records and book appointments',
-          icon: '👤'
+          icon: <User className="w-10 h-10 text-sky-500" />
         };
       case 'doctor':
         return {
           title: 'Doctor Login', 
           subtitle: 'Manage your appointments and patient records',
-          icon: '🩺'
+          icon: <Stethoscope className="w-10 h-10 text-blue-500" />
         };
       case 'admin':
         return {
           title: 'Admin Login',
           subtitle: 'Access administrative dashboard and controls',
-          icon: '🛡️'
+          icon: <Shield className="w-10 h-10 text-purple-500" />
         };
       default:
         return {
           title: 'Sign in to your account',
           subtitle: 'Welcome back! Please sign in to continue.',
-          icon: '🏥'
+          icon: <Activity className="w-10 h-10 text-sky-500" />
         };
     }
   };
@@ -129,116 +131,119 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 selection:bg-sky-200 selection:text-sky-900 relative overflow-hidden flex flex-col">
       <Navbar />
       
-      <div className="flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 sm:space-y-8">
-          <div className="text-center">
-            <div className="text-4xl mb-4">{typeInfo.icon}</div>
-            <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-bold text-gray-900">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-sky-200/50 blur-[120px] animate-pulse-soft" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-300/40 blur-[100px] animate-float" style={{ animationDelay: '2s' }} />
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full max-w-md animate-slide-up">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center p-4 bg-white rounded-2xl shadow-sm mb-6 animate-float">
+              {typeInfo.icon}
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               {typeInfo.title}
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-3 text-lg text-slate-600">
               {typeInfo.subtitle}
             </p>
-            {!isSpecificLogin && (
-              <p className="mt-2 text-sm text-gray-600">
-                Or{' '}
-                <Link to="/signup" className="font-medium text-sky-600 hover:text-sky-500">
-                  create a new account
-                </Link>
-              </p>
-            )}
           </div>
           
-          <Card className="shadow-lg">
-            <CardHeader className="space-y-1 sm:space-y-2">
-              <CardTitle className="text-center text-lg sm:text-xl">
-                {isSpecificLogin ? `${userType?.charAt(0).toUpperCase()}${userType?.slice(1)} Login` : 'Login'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              {error && (
-                <Alert variant="destructive" className="mb-4 sm:mb-6">
-                  <AlertDescription className="text-sm">{error}</AlertDescription>
-                </Alert>
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl p-8 sm:p-10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-100 rounded-bl-full blur-2xl opacity-50 pointer-events-none" />
+            
+            {error && (
+              <Alert variant="destructive" className="mb-6 rounded-xl border-red-200 bg-red-50 text-red-800">
+                <AlertDescription className="font-medium text-sm">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+              <div>
+                <Label htmlFor="email" className="text-sm font-semibold text-slate-700">Email Address</Label>
+                <div className="relative mt-2 group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 transition-all text-base shadow-sm"
+                    placeholder="Enter your email"
+                  />
+                </div>
+                {formErrors.email && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.email}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="text-sm font-semibold text-slate-700">Password</Label>
+                <div className="relative mt-2 group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="pl-12 pr-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 transition-all text-base shadow-sm"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                {formErrors.password && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.password}</p>}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="rememberMe"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({ ...prev, rememberMe: !!checked }))
+                    }
+                    className="rounded-md border-slate-300 data-[state=checked]:bg-sky-500 data-[state=checked]:border-sky-500"
+                  />
+                  <Label htmlFor="rememberMe" className="text-sm font-medium text-slate-600 cursor-pointer">
+                    Remember me
+                  </Label>
+                </div>
+
+                <Link to="/forgot-password" className="text-sm font-semibold text-sky-600 hover:text-sky-500 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-14 text-lg font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 mt-2"
+              >
+                {isLoading ? 'Signing in...' : 'Sign in to Account'}
+              </Button>
+              
+              {!isSpecificLogin && (
+                <p className="mt-8 text-center text-sm text-slate-600 font-medium border-t border-slate-200 pt-6">
+                  Don't have an account?{' '}
+                  <Link to="/signup" className="text-sky-600 hover:text-sky-500 font-bold transition-colors">
+                    Create a new account
+                  </Link>
+                </p>
               )}
-
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                <div>
-                  <Label htmlFor="email" className="text-sm">Email Address</Label>
-                  <div className="relative mt-1">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="pl-10 h-11 sm:h-12"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-                  {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="password" className="text-sm">Password</Label>
-                  <div className="relative mt-1">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="pl-10 pr-10 h-11 sm:h-12"
-                      placeholder="Enter your password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({ ...prev, rememberMe: !!checked }))
-                      }
-                    />
-                    <Label htmlFor="rememberMe" className="text-sm">
-                      Remember me
-                    </Label>
-                  </div>
-
-                  <div className="text-sm">
-                    <Link to="/forgot-password" className="font-medium text-sky-600 hover:text-sky-500">
-                      Forgot password?
-                    </Link>
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full bg-sky-600 hover:bg-sky-700 h-11 sm:h-12 text-base"
-                >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            </form>
+          </div>
         </div>
       </div>
     </div>

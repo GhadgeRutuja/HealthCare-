@@ -37,10 +37,11 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
-import { User as UserType } from '@/services/api';
+import { User as UserType, Doctor, doctorsApi } from '@/services/api';
 
 interface DoctorSettingsProps {
   user: UserType;
+  doctorProfile?: Doctor | null;
 }
 
 interface DoctorProfile {
@@ -101,52 +102,59 @@ interface DoctorProfile {
   };
 }
 
-const DoctorSettings: React.FC<DoctorSettingsProps> = ({ user }) => {
+const DoctorSettings: React.FC<DoctorSettingsProps> = ({ user, doctorProfile }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const dateOfBirth = user.dateOfBirth
+    ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+    : '';
 
   const [profile, setProfile] = useState<DoctorProfile>({
     personalInfo: {
-      firstName: user.name?.split(' ')[0] || '',
-      lastName: user.name?.split(' ')[1] || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       email: user.email || '',
-      phone: '',
-      dateOfBirth: '',
-      gender: '',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'United States'
+      phone: user.phone || '',
+      dateOfBirth,
+      gender: user.gender || '',
+      address: user.address?.street || '',
+      city: user.address?.city || '',
+      state: user.address?.state || '',
+      zipCode: user.address?.zipCode || '',
+      country: user.address?.country || 'United States'
     },
     professionalInfo: {
-      medicalLicense: '',
-      specialty: user.role === 'doctor' ? 'General Medicine' : '',
-      subSpecialty: '',
-      yearsOfExperience: 0,
-      education: [],
-      certifications: [],
-      currentHospital: '',
+      medicalLicense: doctorProfile?.licenseNumber || '',
+      specialty: doctorProfile?.specialties?.[0] || (user.role === 'doctor' ? 'General Medicine' : ''),
+      subSpecialty: doctorProfile?.specialties?.[1] || '',
+      yearsOfExperience: doctorProfile?.experience?.years || 0,
+      education: doctorProfile?.education?.map((education) =>
+        `${education.degree} - ${education.institution} (${education.graduationYear})`
+      ) || [],
+      certifications: doctorProfile?.certifications?.map((certification) => certification.name) || [],
+      currentHospital: doctorProfile?.hospitalAffiliations?.[0]?.name || '',
       previousExperience: [],
-      consultationFee: 0,
-      languages: ['English'],
-      biography: ''
+      consultationFee: doctorProfile?.consultationFee || 0,
+      languages: doctorProfile?.languages?.length ? doctorProfile.languages : ['English'],
+      biography: doctorProfile?.bio || ''
     },
     schedule: {
-      workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      workingDays: Object.entries(doctorProfile?.workingHours || {})
+        .filter(([, hours]) => hours.isWorking)
+        .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1)),
       workingHours: {
-        start: '09:00',
-        end: '17:00'
+        start: doctorProfile?.workingHours?.monday?.startTime || '09:00',
+        end: doctorProfile?.workingHours?.monday?.endTime || '17:00'
       },
       breakTime: {
         start: '12:00',
         end: '13:00'
       },
-      appointmentDuration: 30,
-      maxDailyAppointments: 16
+      appointmentDuration: doctorProfile?.appointmentDuration || 30,
+      maxDailyAppointments: doctorProfile?.maxDailyAppointments || 16
     },
     notifications: {
       emailNotifications: true,
@@ -197,11 +205,7 @@ const DoctorSettings: React.FC<DoctorSettingsProps> = ({ user }) => {
   const handleSave = async (section: keyof DoctorProfile) => {
     try {
       setSaving(true);
-      // TODO: Replace with actual API call
-      // await api.updateDoctorProfile(user._id, { [section]: profile[section] });
-      
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await doctorsApi.updateProfile({ [section]: profile[section] });
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
     } catch (error) {
       console.error('Failed to save settings:', error);

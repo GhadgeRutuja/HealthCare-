@@ -56,22 +56,23 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Public signup is limited to patients and doctors. Admin accounts must
+    // be provisioned separately and can only sign in with their credentials.
+    const validRoles = ['patient', 'doctor'];
+    const userRole = role || 'patient';
+    if (!validRoles.includes(userRole)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin accounts cannot be created through signup'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
         message: 'User already exists with this email'
-      });
-    }
-
-    // Validate role
-    const validRoles = ['patient', 'doctor', 'admin'];
-    const userRole = role || 'patient';
-    if (!validRoles.includes(userRole)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid user role'
       });
     }
 
@@ -87,7 +88,7 @@ router.post('/register', async (req, res) => {
       gender,
       address,
       isActive: true,
-      isEmailVerified: userRole === 'admin' // Auto-verify admin users
+      isEmailVerified: false
     };
 
     // Create user
@@ -141,7 +142,7 @@ router.post('/register', async (req, res) => {
         },
         totalPatients: 0,
         isAvailableForEmergency: false,
-        isVerified: false,
+        isVerified: true,
         status: 'active' // Set to active instead of pending_verification to show immediately
       };
 

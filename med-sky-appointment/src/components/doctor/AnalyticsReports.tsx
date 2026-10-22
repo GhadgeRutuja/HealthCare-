@@ -40,10 +40,11 @@ import {
   Award,
   Zap
 } from 'lucide-react';
-import { User as UserType } from '@/services/api';
+import { Appointment, Doctor, User as UserType, appointmentsApi } from '@/services/api';
 
 interface AnalyticsReportsProps {
   user: UserType;
+  doctorProfile?: Doctor | null;
 }
 
 interface MetricData {
@@ -61,11 +62,10 @@ interface ChartData {
   patients?: number;
 }
 
-const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
+const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user, doctorProfile }) => {
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
 
-  // Mock data - will be replaced with real API calls
   const [metrics, setMetrics] = useState<MetricData[]>([
     { name: 'Total Patients', value: 0, change: 0, trend: 'neutral' },
     { name: 'Appointments This Month', value: 0, change: 0, trend: 'neutral' },
@@ -82,23 +82,78 @@ const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
     const fetchAnalyticsData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
-        // const metricsData = await api.getDoctorMetrics(user._id, selectedPeriod);
-        // const appointmentsData = await api.getAppointmentAnalytics(user._id, selectedPeriod);
-        // const revenueData = await api.getRevenueAnalytics(user._id, selectedPeriod);
-        
-        // Mock data
+        const response = await appointmentsApi.getAll();
+        const appointments = response.data || [];
+        const now = new Date();
+        const periodStart = new Date(now);
+        if (selectedPeriod === 'week') periodStart.setDate(now.getDate() - 7);
+        if (selectedPeriod === 'month') periodStart.setMonth(now.getMonth() - 1);
+        if (selectedPeriod === 'quarter') periodStart.setMonth(now.getMonth() - 3);
+        if (selectedPeriod === 'year') periodStart.setFullYear(now.getFullYear() - 1);
+
+        const inPeriod = appointments.filter((appointment) =>
+          new Date(appointment.appointmentDate) >= periodStart &&
+          new Date(appointment.appointmentDate) <= now
+        );
+        const uniquePatients = new Set(
+          appointments.map((appointment) =>
+            typeof appointment.patient === 'string'
+              ? appointment.patient
+              : appointment.patient?._id
+          ).filter(Boolean)
+        ).size;
+        const revenue = inPeriod.reduce((total, appointment) =>
+          total + Number(appointment.consultationFee || appointment.consultation?.fee || 0), 0);
+        const currentCompleted = inPeriod.filter((appointment) =>
+          ['completed'].includes(appointment.status)
+        ).length;
+        const currentCancelled = inPeriod.filter((appointment) =>
+          ['cancelled', 'no-show', 'no_show'].includes(appointment.status)
+        ).length;
+        const previousStart = new Date(periodStart);
+        const periodLength = now.getTime() - periodStart.getTime();
+        previousStart.setTime(periodStart.getTime() - periodLength);
+        const previousPeriod = appointments.filter((appointment) => {
+          const date = new Date(appointment.appointmentDate).getTime();
+          return date >= previousStart.getTime() && date < periodStart.getTime();
+        });
+        const percentChange = (current: number, previous: number) =>
+          previous === 0 ? (current > 0 ? 100 : 0) : Math.round(((current - previous) / previous) * 100);
+
         setMetrics([
-          { name: 'Total Patients', value: 0, change: 0, trend: 'neutral' },
-          { name: 'Appointments This Month', value: 0, change: 0, trend: 'neutral' },
-          { name: 'Revenue This Month', value: 0, change: 0, trend: 'neutral' },
-          { name: 'Average Rating', value: 0, change: 0, trend: 'neutral' }
+          { name: 'Total Patients', value: uniquePatients, change: percentChange(uniquePatients, new Set(previousPeriod.map((appointment) => typeof appointment.patient === 'string' ? appointment.patient : appointment.patient?._id)).size), trend: uniquePatients >= 0 ? 'up' : 'neutral' },
+          { name: 'Appointments This Period', value: inPeriod.length, change: percentChange(inPeriod.length, previousPeriod.length), trend: inPeriod.length >= previousPeriod.length ? 'up' : 'down' },
+          { name: 'Revenue This Period', value: revenue, change: percentChange(revenue, previousPeriod.reduce((total, appointment) => total + Number(appointment.consultationFee || appointment.consultation?.fee || 0), 0)), trend: revenue >= 0 ? 'up' : 'neutral' },
+          { name: 'Average Rating', value: doctorProfile?.rating?.average || 0, change: 0, trend: 'neutral' }
         ]);
-        
-        setAppointmentData([]);
-        setRevenueData([]);
-        setPatientDemographics([]);
-        setSpecialtyStats([]);
+
+        const groupedAppointments = inPeriod.reduce<Record<string, number>>((groups, appointment) => {
+          const key = new Date(appointment.appointmentDate).toLocaleDateString('en-US', { weekday: 'short' });
+          groups[key] = (groups[key] || 0) + 1;
+          return groups;
+        }, {});
+        setAppointmentData(Object.entries(groupedAppointments).map(([name, appointments]) => ({ name, appointments })));
+        const groupedRevenue = inPeriod.reduce<Record<string, number>>((groups, appointment) => {
+          const key = new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short' });
+          groups[key] = (groups[key] || 0) + Number(appointment.consultationFee || appointment.consultation?.fee || 0);
+          return groups;
+        }, {});
+        setRevenueData(Object.entries(groupedRevenue).map(([name, revenue]) => ({ name, revenue })));
+        const ageGroups: Record<string, number> = {};
+        inPeriod.forEach((appointment) => {
+          const patient = typeof appointment.patient === 'string' ? null : appointment.patient;
+          const age = patient?.dateOfBirth
+            ? Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / 31557600000)
+            : null;
+          const group = age === null ? 'Unknown' : age <= 18 ? '0-18' : age <= 35 ? '19-35' : age <= 50 ? '36-50' : age <= 65 ? '51-65' : '65+';
+          ageGroups[group] = (ageGroups[group] || 0) + 1;
+        });
+        setPatientDemographics(Object.entries(ageGroups).map(([name, value]) => ({ name, value })));
+        setSpecialtyStats([
+          { name: 'Completed', value: currentCompleted },
+          { name: 'Upcoming', value: inPeriod.length - currentCompleted - currentCancelled },
+          { name: 'Cancelled / No-show', value: currentCancelled },
+        ]);
       } catch (error) {
         console.error('Failed to fetch analytics data:', error);
       } finally {
@@ -138,6 +193,13 @@ const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
       default: return 'text-gray-600';
     }
   };
+
+  const revenueMetric = metrics.find((metric) => metric.name.startsWith('Revenue'))?.value || 0;
+  const appointmentMetric = metrics.find((metric) => metric.name.startsWith('Appointments'))?.value || 0;
+  const bestDay = appointmentData.reduce(
+    (best, current) => current.appointments && current.appointments > (best?.appointments || 0) ? current : best,
+    appointmentData[0]
+  );
 
   return (
     <div className="space-y-6">
@@ -259,7 +321,7 @@ const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
-                            data={appointmentData}
+                            data={specialtyStats}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -268,7 +330,7 @@ const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
                             fill="#8884d8"
                             dataKey="value"
                           >
-                            {appointmentData.map((entry, index) => (
+                            {specialtyStats.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -325,43 +387,25 @@ const AnalyticsReports: React.FC<AnalyticsReportsProps> = ({ user }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Target className="h-5 w-5 mr-2 text-purple-600" />
-                      Revenue Goals
+                      Revenue Summary
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">Monthly Goal</span>
-                          <span className="text-sm text-gray-600">$0 / $0</span>
-                        </div>
-                        <Progress value={0} className="h-2" />
-                        <p className="text-xs text-gray-500 mt-1">0% of monthly target</p>
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">Yearly Goal</span>
-                          <span className="text-sm text-gray-600">$0 / $0</span>
-                        </div>
-                        <Progress value={0} className="h-2" />
-                        <p className="text-xs text-gray-500 mt-1">0% of yearly target</p>
-                      </div>
-
                       <div className="pt-4 border-t">
                         <h4 className="font-medium mb-3">Quick Stats</h4>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Average per appointment</span>
-                            <span className="text-sm font-medium">$0</span>
+                            <span className="text-sm font-medium">{formatCurrency(appointmentMetric ? revenueMetric / appointmentMetric : 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Best performing day</span>
-                            <span className="text-sm font-medium">N/A</span>
+                            <span className="text-sm font-medium">{bestDay?.name || 'No data'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Growth rate</span>
-                            <span className="text-sm font-medium">0%</span>
+                            <span className="text-sm font-medium">{metrics.find((metric) => metric.name.startsWith('Revenue'))?.change || 0}%</span>
                           </div>
                         </div>
                       </div>

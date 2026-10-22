@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminApi } from '@/services/api';
+import Navbar from '@/components/Navbar';
 import PatientDashboard from '@/components/dashboard/PatientDashboard-simple';
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard-new';
 import AdminAnalytics from '@/components/admin/AdminAnalytics';
@@ -8,6 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import {
   Calendar,
   FileText,
@@ -20,7 +25,16 @@ import {
   AlertCircle,
   Settings,
   Eye,
-  Mail
+  Mail,
+  Edit,
+  Trash2,
+  ShieldBan,
+  ShieldCheck,
+  UserCog,
+  Stethoscope,
+  ChevronRight,
+  User,
+  TrendingUp
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -183,7 +197,8 @@ const Dashboard: React.FC = () => {
   const content = getDashboardContent();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -374,6 +389,14 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [editingDoctor, setEditingDoctor] = useState<any>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    specialty: '',
+    licenseNumber: '',
+    consultationFee: '',
+    experience: ''
+  });
 
   useEffect(() => {
     fetchAdminData();
@@ -409,6 +432,59 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleEditClick = (doctor: any) => {
+    setEditingDoctor(doctor);
+    setEditForm({
+      specialty: doctor.specialization !== 'Not specified' ? doctor.specialization : '',
+      licenseNumber: doctor.licenseNumber || '',
+      consultationFee: doctor.consultationFee?.toString() || '',
+      experience: doctor.experience !== 'Not specified' ? doctor.experience.replace(' years', '') : ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateDoctor = async () => {
+    try {
+      await adminApi.updateDoctor(editingDoctor._id, {
+        specialty: editForm.specialty,
+        licenseNumber: editForm.licenseNumber,
+        consultationFee: Number(editForm.consultationFee),
+        experience: Number(editForm.experience)
+      });
+      toast.success('Doctor details updated successfully');
+      setIsEditModalOpen(false);
+      fetchAdminData();
+    } catch (error) {
+      console.error('Error updating doctor:', error);
+      toast.error('Failed to update doctor details');
+    }
+  };
+
+  const handleToggleBlockDoctor = async (doctor: any) => {
+    const newStatus = doctor.status === 'suspended' ? 'active' : 'suspended';
+    try {
+      await adminApi.updateDoctorStatus(doctor._id, newStatus);
+      toast.success(`Doctor ${newStatus === 'suspended' ? 'blocked' : 'unblocked'} successfully`);
+      fetchAdminData();
+    } catch (error) {
+      console.error('Error updating doctor status:', error);
+      toast.error('Failed to update doctor status');
+    }
+  };
+
+  const handleDeleteDoctor = async (doctor: any) => {
+    if (window.confirm(`Are you sure you want to delete Dr. ${doctor.name}? This will also delete their user account.`)) {
+      try {
+        await adminApi.deleteUser(doctor.userId);
+        toast.success('Doctor deleted successfully');
+        fetchAdminData();
+      } catch (error) {
+        console.error('Error deleting doctor:', error);
+        toast.error('Failed to delete doctor');
+      }
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
@@ -421,88 +497,159 @@ const AdminDashboard: React.FC = () => {
   };
 
   const renderOverview = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{systemStats?.totalUsers || 0}</div>
-          <p className="text-xs text-muted-foreground">Active users in system</p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
+      <Card className="glass-card overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Users</p>
+              <h3 className="text-4xl font-extrabold text-slate-800 tracking-tight">{systemStats?.totalUsers || 0}</h3>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white shadow-[0_8px_16px_rgb(0_0_0_/_0.05)] flex items-center justify-center border border-slate-100/50 group-hover:scale-110 transition-transform duration-300">
+              <Users className="h-7 w-7 text-blue-500" />
+            </div>
+          </div>
+          <div className="mt-6 flex items-center text-sm">
+            <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full flex items-center font-semibold text-xs mr-3 border border-emerald-100">
+              <TrendingUp className="h-3 w-3 mr-1" /> +12%
+            </span>
+            <span className="text-slate-400 font-medium text-xs">vs last month</span>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Doctors</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{systemStats?.totalDoctors || 0}</div>
-          <p className="text-xs text-muted-foreground">Registered doctors</p>
+      
+      <Card className="glass-card overflow-hidden group stagger-1">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Doctors</p>
+              <h3 className="text-4xl font-extrabold text-slate-800 tracking-tight">{systemStats?.totalDoctors || 0}</h3>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white shadow-[0_8px_16px_rgb(0_0_0_/_0.05)] flex items-center justify-center border border-slate-100/50 group-hover:scale-110 transition-transform duration-300">
+              <Stethoscope className="h-7 w-7 text-indigo-500" />
+            </div>
+          </div>
+          <div className="mt-6 flex items-center text-sm">
+            <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full flex items-center font-semibold text-xs mr-3 border border-emerald-100">
+              <TrendingUp className="h-3 w-3 mr-1" /> +4%
+            </span>
+            <span className="text-slate-400 font-medium text-xs">vs last month</span>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Verifications</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{systemStats?.pendingVerifications || 0}</div>
-          <p className="text-xs text-muted-foreground">Doctors awaiting approval</p>
+      
+      <Card className="glass-card overflow-hidden group stagger-2">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Pending Verify</p>
+              <h3 className="text-4xl font-extrabold text-slate-800 tracking-tight">{systemStats?.pendingVerifications || 0}</h3>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white shadow-[0_8px_16px_rgb(0_0_0_/_0.05)] flex items-center justify-center border border-slate-100/50 group-hover:scale-110 transition-transform duration-300">
+              <ShieldCheck className="h-7 w-7 text-amber-500" />
+            </div>
+          </div>
+          <div className="mt-6 flex items-center text-sm">
+            <span className={`px-2.5 py-1 rounded-full flex items-center font-semibold text-xs border ${systemStats?.pendingVerifications > 0 ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
+              {systemStats?.pendingVerifications > 0 ? "Requires attention" : "All caught up"}
+            </span>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{systemStats?.totalAppointments || 0}</div>
-          <p className="text-xs text-muted-foreground">All time appointments</p>
+      
+      <Card className="glass-card overflow-hidden group stagger-3">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Appointments</p>
+              <h3 className="text-4xl font-extrabold text-slate-800 tracking-tight">{systemStats?.totalAppointments || 0}</h3>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white shadow-[0_8px_16px_rgb(0_0_0_/_0.05)] flex items-center justify-center border border-slate-100/50 group-hover:scale-110 transition-transform duration-300">
+              <Calendar className="h-7 w-7 text-emerald-500" />
+            </div>
+          </div>
+          <div className="mt-6 flex items-center text-sm">
+            <span className="bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full flex items-center font-semibold text-xs mr-3 border border-emerald-100">
+              <TrendingUp className="h-3 w-3 mr-1" /> +18%
+            </span>
+            <span className="text-slate-400 font-medium text-xs">vs last month</span>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 
   const renderUsers = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Management</CardTitle>
-        <CardDescription>Manage all users in the system</CardDescription>
+    <Card className="glass-panel overflow-hidden animate-slide-up">
+      <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-6 px-8 pt-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-2xl font-extrabold text-slate-800 tracking-tight">User Management</CardTitle>
+            <CardDescription className="text-slate-500 font-medium mt-1">Manage all users in the system</CardDescription>
+          </div>
+          <div className="h-12 w-12 rounded-full gradient-mesh-accent shadow-lg flex items-center justify-center text-white">
+            <Users className="h-6 w-6" />
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Role</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Created</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
+              <tr className="bg-slate-50/50 border-b border-slate-200/60">
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Role</th>
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Created</th>
+                <th className="px-8 py-5 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td className="border border-gray-300 px-4 py-2">{user.name}</td>
-                  <td className="border border-gray-300 px-4 py-2">{user.email}</td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                      user.role === 'doctor' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {user.role}
+            <tbody className="divide-y divide-slate-100 bg-transparent">
+              {users.map((u, i) => (
+                <tr key={u._id} className="table-row-hover group" style={{ animationDelay: `${i * 50}ms` }}>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-sm shadow-slate-200/50">
+                        {u.firstName?.[0]}{u.lastName?.[0]}
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-800">{u.firstName} {u.lastName}</div>
+                        <div className="text-sm text-slate-500 flex items-center gap-1.5 mt-0.5">
+                          <Mail className="h-3.5 w-3.5" /> {u.email}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${
+                        u.role === 'admin' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' :
+                        u.role === 'doctor' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' :
+                        'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+                      }`}></span>
+                      <span className="font-semibold text-slate-700">
+                        {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                      </span>
                     </span>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                  <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-500 font-medium">
+                    {new Date(u.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
+                  <td className="px-8 py-5 whitespace-nowrap text-right">
                     <button
-                      onClick={() => handleDeleteUser(user._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
-                      disabled={user.role === 'admin'}
+                      onClick={() => handleDeleteUser(u._id)}
+                      className={`p-2.5 rounded-full transition-all duration-300 ${
+                        u.role === 'admin' 
+                          ? 'text-slate-300 cursor-not-allowed bg-slate-50' 
+                          : 'text-slate-400 hover:text-white hover:bg-rose-500 hover:shadow-md hover:shadow-rose-500/30'
+                      }`}
+                      disabled={u.role === 'admin'}
+                      title={u.role === 'admin' ? 'Protected' : 'Delete User'}
                     >
-                      {user.role === 'admin' ? 'Protected' : 'Delete'}
+                      {u.role === 'admin' ? <ShieldCheck className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                     </button>
                   </td>
                 </tr>
@@ -515,47 +662,96 @@ const AdminDashboard: React.FC = () => {
   );
 
   const renderDoctors = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Doctor Management</CardTitle>
-        <CardDescription>Verify and manage doctor accounts</CardDescription>
+    <Card className="glass-panel overflow-hidden animate-slide-up">
+      <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-6 px-8 pt-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-2xl font-extrabold text-slate-800 tracking-tight">Doctor Management</CardTitle>
+            <CardDescription className="text-slate-500 font-medium mt-1">Verify and manage doctor accounts</CardDescription>
+          </div>
+          <div className="h-12 w-12 rounded-full gradient-mesh-purple shadow-lg flex items-center justify-center text-white">
+            <Stethoscope className="h-6 w-6" />
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Specialization</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">License</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
+              <tr className="bg-slate-50/50 border-b border-slate-200/60">
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Doctor</th>
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Specialization</th>
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">License</th>
+                <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                <th className="px-8 py-5 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {doctors.map((doctor) => (
-                <tr key={doctor._id}>
-                  <td className="border border-gray-300 px-4 py-2">{doctor.name}</td>
-                  <td className="border border-gray-300 px-4 py-2">{doctor.specialization}</td>
-                  <td className="border border-gray-300 px-4 py-2">{doctor.licenseNumber}</td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      doctor.status === 'verified' ? 'bg-green-100 text-green-800' :
-                      doctor.status === 'pending_verification' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {doctor.status}
-                    </span>
+            <tbody className="divide-y divide-slate-100 bg-transparent">
+              {doctors.map((doctor, i) => (
+                <tr key={doctor._id} className="table-row-hover group" style={{ animationDelay: `${i * 50}ms` }}>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-600 font-bold shadow-sm shadow-indigo-200/50">
+                        <Stethoscope className="h-5 w-5" />
+                      </div>
+                      <div className="font-bold text-slate-800 text-base">{doctor.name}</div>
+                    </div>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    {doctor.status === 'pending_verification' && (
+                  <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-500 font-medium">
+                    {doctor.specialization}
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-500 font-medium">
+                    <span className="font-mono bg-slate-100 px-2 py-1 rounded text-xs">{doctor.licenseNumber}</span>
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <button
+                      onClick={() => doctor.status === 'pending_verification' ? handleVerifyDoctor(doctor._id) : null}
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 ${
+                        doctor.status === 'active' || doctor.isVerified 
+                          ? 'bg-emerald-50 text-emerald-600 cursor-default shadow-sm' 
+                          : doctor.status === 'pending_verification' 
+                            ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer' 
+                            : 'bg-rose-50 text-rose-600 cursor-default shadow-sm'
+                      }`}
+                      disabled={doctor.status !== 'pending_verification'}
+                    >
+                      {doctor.status === 'active' || doctor.isVerified ? (
+                        <><ShieldCheck className="w-4 h-4 mr-1.5" /> Verified</>
+                      ) : doctor.status === 'pending_verification' ? (
+                        'Verify Doctor'
+                      ) : (
+                        doctor.status.charAt(0).toUpperCase() + doctor.status.slice(1)
+                      )}
+                    </button>
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleVerifyDoctor(doctor._id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600 mr-2"
+                        onClick={() => handleEditClick(doctor)}
+                        className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-300 hover:shadow-sm"
+                        title="Edit Doctor"
                       >
-                        Verify
+                        <Edit className="h-4 w-4" />
                       </button>
-                    )}
+                      <button
+                        onClick={() => handleToggleBlockDoctor(doctor)}
+                        className={`p-2.5 rounded-full transition-all duration-300 hover:shadow-sm ${
+                          doctor.status === 'suspended' 
+                            ? 'text-amber-500 bg-amber-50 hover:bg-amber-100' 
+                            : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'
+                        }`}
+                        title={doctor.status === 'suspended' ? 'Unblock Doctor' : 'Block Doctor'}
+                      >
+                        <ShieldBan className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDoctor(doctor)}
+                        className="p-2.5 text-slate-400 hover:text-white hover:bg-rose-500 rounded-full transition-all duration-300 hover:shadow-md hover:shadow-rose-500/30"
+                        title="Delete Doctor"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -563,49 +759,139 @@ const AdminDashboard: React.FC = () => {
           </table>
         </div>
       </CardContent>
+
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Doctor Info</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="specialty" className="text-right">Specialty</Label>
+              <Input 
+                id="specialty" 
+                value={editForm.specialty} 
+                onChange={(e) => setEditForm({...editForm, specialty: e.target.value})} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="licenseNumber" className="text-right">License</Label>
+              <Input 
+                id="licenseNumber" 
+                value={editForm.licenseNumber} 
+                onChange={(e) => setEditForm({...editForm, licenseNumber: e.target.value})} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="consultationFee" className="text-right">Fee ($)</Label>
+              <Input 
+                id="consultationFee" 
+                type="number"
+                value={editForm.consultationFee} 
+                onChange={(e) => setEditForm({...editForm, consultationFee: e.target.value})} 
+                className="col-span-3" 
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="experience" className="text-right">Exp (Yrs)</Label>
+              <Input 
+                id="experience" 
+                type="number"
+                value={editForm.experience} 
+                onChange={(e) => setEditForm({...editForm, experience: e.target.value})} 
+                className="col-span-3" 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateDoctor}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 
   const renderAppointments = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Appointment Management</CardTitle>
-        <CardDescription>Monitor all appointments in the system</CardDescription>
+    <Card className="glass-panel overflow-hidden animate-slide-up">
+      <CardHeader className="bg-white/40 border-b border-slate-200/50 pb-6 px-8 pt-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-2xl font-extrabold text-slate-800 tracking-tight">Appointment Management</CardTitle>
+            <CardDescription className="text-slate-500 font-medium mt-1">Monitor all appointments in the system</CardDescription>
+          </div>
+          <div className="h-12 w-12 rounded-full gradient-mesh-emerald shadow-lg flex items-center justify-center text-white">
+            <Calendar className="h-6 w-6" />
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {appointments.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No appointments found</p>
-            <p className="text-sm text-gray-400 mt-2">Appointments will appear here once the appointment system is fully implemented</p>
+          <div className="text-center py-20 animate-fade-in">
+            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-200 shadow-inner">
+              <Calendar className="h-10 w-10 text-slate-300" />
+            </div>
+            <p className="text-slate-800 font-extrabold text-xl">No appointments found</p>
+            <p className="text-base text-slate-400 mt-2 max-w-sm mx-auto font-medium">Appointments will appear here once the system is fully active.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
+            <table className="w-full">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-2 text-left">Patient</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Doctor</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Time</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
+                <tr className="bg-slate-50/50 border-b border-slate-200/60">
+                  <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Patient</th>
+                  <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Doctor</th>
+                  <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Date & Time</th>
+                  <th className="px-8 py-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                 </tr>
               </thead>
-              <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment._id}>
-                    <td className="border border-gray-300 px-4 py-2">{appointment.patientName}</td>
-                    <td className="border border-gray-300 px-4 py-2">{appointment.doctorName}</td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {new Date(appointment.date).toLocaleDateString()}
+              <tbody className="divide-y divide-slate-100 bg-transparent">
+                {appointments.map((appointment, i) => (
+                  <tr key={appointment._id} className="table-row-hover group" style={{ animationDelay: `${i * 50}ms` }}>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-bold border border-blue-100 shadow-sm">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div className="font-bold text-slate-800">
+                          {appointment.patient ? `${appointment.patient.firstName} ${appointment.patient.lastName}` : appointment.patientName || 'Unknown'}
+                        </div>
+                      </div>
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">{appointment.time}</td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {appointment.status}
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100">
+                          <Stethoscope className="h-4 w-4" />
+                        </div>
+                        <span className="font-semibold text-slate-600">
+                          {appointment.doctor?.user ? `Dr. ${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` : appointment.doctorName || 'Unknown'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap text-sm text-slate-500 font-medium">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-slate-800 font-semibold flex items-center gap-2">
+                           <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                           {appointment.appointmentDate ? new Date(appointment.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : appointment.date ? new Date(appointment.date).toLocaleDateString() : 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-2 text-slate-400">
+                          <Clock className="h-3.5 w-3.5" />
+                          {appointment.appointmentTime || appointment.time || 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 whitespace-nowrap">
+                      <span className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 rounded-full ${
+                          ['confirmed', 'completed'].includes(appointment.status) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' :
+                          ['scheduled', 'in-progress', 'rescheduled'].includes(appointment.status) ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]' :
+                          'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
+                        }`}></span>
+                        <span className="font-semibold text-slate-700">
+                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        </span>
                       </span>
                     </td>
                   </tr>
@@ -644,36 +930,40 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen gradient-mesh-bg flex flex-col relative overflow-hidden font-sans">
+      <Navbar />
+      
+      {/* Header section with glassmorphism */}
+      <div className="glass-panel sticky top-0 z-20 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border-b-0 border-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">System administration and management</p>
+            <div className="animate-slide-in-right">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Admin <span className="text-gradient text-gradient-blue">Dashboard</span></h1>
+              <p className="text-slate-500 mt-2 font-medium">System administration and management</p>
             </div>
             <button
               onClick={fetchAdminData}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+              className="bg-white text-slate-700 px-5 py-3 rounded-full hover:bg-slate-50 border border-slate-200 shadow-sm flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 font-bold animate-slide-in-right stagger-1"
             >
-              <Settings className="h-4 w-4" />
+              <Settings className="h-4 w-4 text-slate-500" />
               Refresh Data
             </button>
           </div>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <nav className="flex space-x-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full z-10">
+        {/* Navigation Tabs */}
+        <div className="mb-10 flex justify-center animate-scale-up stagger-2">
+          <nav className="inline-flex space-x-2 bg-white/70 backdrop-blur-xl p-2 rounded-2xl shadow-lg shadow-slate-200/50 border border-white/80">
             {['overview', 'analytics', 'users', 'doctors', 'appointments'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === tab
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'gradient-mesh-accent text-white shadow-md shadow-blue-500/25 scale-105'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/50'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -682,7 +972,10 @@ const AdminDashboard: React.FC = () => {
           </nav>
         </div>
 
-        {renderContent()}
+        {/* Dynamic Content */}
+        <div className="transition-all duration-500">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );

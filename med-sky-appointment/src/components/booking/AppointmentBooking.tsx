@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,16 +13,21 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, User, Stethoscope, MapPin, CheckCircle } from 'lucide-react';
 import { appointmentsApi, doctorsApi, Doctor } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppointmentBookingProps {
   preselectedDoctor?: string | null;
+  preselectedDoctorId?: string | null;
   preselectedSpecialty?: string | null;
 }
 
 const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ 
   preselectedDoctor, 
+  preselectedDoctorId,
   preselectedSpecialty 
 }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
@@ -35,11 +41,22 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dbDoctors, setDbDoctors] = useState<Doctor[]>([]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    setPatientName(`${user.firstName || ''} ${user.lastName || ''}`.trim());
+    setPatientEmail(user.email || '');
+    setPatientPhone(user.phone || '');
+  }, [user]);
+
   // Set preselected values and fetch doctors when component mounts
   useEffect(() => {
-    if (preselectedDoctor) {
-      setSelectedDoctor(preselectedDoctor);
+    if (preselectedDoctorId) {
+      setSelectedDoctor(preselectedDoctorId);
+    } else if (preselectedDoctor) {
+      setSelectedDoctor(preselectedDoctor); // fallback for existing string matches
     }
+    
     if (preselectedSpecialty) {
       setSelectedDepartment(preselectedSpecialty);
     }
@@ -47,7 +64,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     // Fetch real doctors
     const fetchDoctors = async () => {
       try {
-        const res = await doctorsApi.getAll();
+        const res = await doctorsApi.getAll({ limit: 100 });
         if (res.success) {
           setDbDoctors(res.data);
         }
@@ -57,7 +74,7 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     };
     
     fetchDoctors();
-  }, [preselectedDoctor, preselectedSpecialty]);
+  }, [preselectedDoctorId, preselectedDoctor, preselectedSpecialty]);
 
   const departments = [
     'Cardiology',
@@ -69,7 +86,6 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     'General Medicine'
   ];
 
-  // We use dbDoctors instead of hardcoded doctors, but keep the hardcoded as fallback for UI if none exist yet
   const displayDoctors = dbDoctors.length > 0 
     ? dbDoctors.map(doc => ({ 
         id: doc._id, 
@@ -82,6 +98,17 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
         { id: '3', name: 'Dr. Emily Davis', department: 'Pediatrics' },
       ];
 
+  // Bulletproof fallback: if a doctor is preselected but not in the fetched list (e.g., due to pagination), add them
+  if (preselectedDoctorId && preselectedDoctor && dbDoctors.length > 0) {
+    if (!displayDoctors.some(d => d.id === preselectedDoctorId)) {
+      displayDoctors.push({
+        id: preselectedDoctorId,
+        name: preselectedDoctor,
+        department: preselectedSpecialty || 'General'
+      });
+    }
+  }
+
   const timeSlots = [
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM',
     '11:00 AM', '11:30 AM', '02:00 PM', '02:30 PM',
@@ -92,6 +119,12 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
     e.preventDefault();
     if (!selectedDate || !selectedTime || !selectedDoctor) return;
     
+    if (!user) {
+      alert("You must be logged in as a patient to book an appointment.");
+      navigate('/login/patient');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Convert "10:30 AM" to "10:30" or "02:00 PM" to "14:00"
@@ -164,7 +197,10 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                   >
                     Book Another Appointment
                   </Button>
-                  <Button className="bg-sky-600 hover:bg-sky-700">
+                  <Button 
+                    className="bg-sky-600 hover:bg-sky-700"
+                    onClick={() => navigate('/dashboard')}
+                  >
                     View My Appointments
                   </Button>
                 </div>
@@ -257,18 +293,24 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({
                       
                       <div>
                         <Label>Doctor</Label>
-                        <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select doctor" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {displayDoctors.map((doctor) => (
-                              <SelectItem key={doctor.id} value={doctor.id}>
-                                {doctor.name} - {doctor.department}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {dbDoctors.length === 0 ? (
+                          <div className="h-10 px-3 py-2 border rounded-md bg-slate-50 text-sm text-slate-500 flex items-center">
+                            Loading doctors...
+                          </div>
+                        ) : (
+                          <Select value={selectedDoctor || undefined} onValueChange={setSelectedDoctor}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select doctor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {displayDoctors.map((doctor) => (
+                                <SelectItem key={doctor.id} value={doctor.id}>
+                                  {doctor.name} - {doctor.department}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
 

@@ -111,6 +111,12 @@ export const doctorsApi = {
   // Get doctors by specialty
   getBySpecialty: (specialty: string) =>
     apiService.get<ApiResponse<Doctor[]>>(`/doctors?specialty=${specialty}`),
+
+  updateProfile: (data: {
+    personalInfo?: Record<string, unknown>;
+    professionalInfo?: Record<string, unknown>;
+    schedule?: Record<string, unknown>;
+  }) => apiService.put<ApiResponse<Doctor>>('/doctors/profile', data),
 };
 
 // Services-related API calls
@@ -239,8 +245,12 @@ export const messagesApi = {
 // Users-related API calls
 export const usersApi = {
   // Get all users
-  getAll: () => 
-    apiService.get<ApiResponse<User[]>>('/users'),
+  getAll: (params?: { search?: string }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    const queryString = queryParams.toString();
+    return apiService.get<ApiResponse<User[]>>(`/users${queryString ? `?${queryString}` : ''}`);
+  },
 
   // Get user by ID
   getById: (id: string) => 
@@ -316,6 +326,9 @@ export const healthApi = {
 // Admin API endpoints
 export const adminApi = {
   // User Management
+  createUser: (userData: any) => 
+    apiService.post<ApiResponse<any>>('/admin/users', userData),
+
   getAllUsers: (params?: {
     role?: 'patient' | 'doctor' | 'admin';
     page?: number;
@@ -341,6 +354,10 @@ export const adminApi = {
   // Delete user
   deleteUser: (userId: string) =>
     apiService.delete<ApiResponse<void>>(`/admin/users/${userId}`),
+
+  // Get all appointments
+  getAllAppointments: () =>
+    apiService.get<ApiResponse<Appointment[]>>('/admin/appointments'),
 
   // Doctor Management
   getAllDoctors: (params?: {
@@ -368,6 +385,10 @@ export const adminApi = {
   // Update doctor status
   updateDoctorStatus: (doctorId: string, status: 'active' | 'inactive' | 'suspended' | 'pending_verification') =>
     apiService.put<ApiResponse<Doctor>>(`/admin/doctors/${doctorId}/status`, { status }),
+
+  // Update full doctor details
+  updateDoctor: (doctorId: string, data: any) =>
+    apiService.put<ApiResponse<Doctor>>(`/admin/doctors/${doctorId}`, data),
 
   // System Analytics
   getSystemStats: () =>
@@ -453,6 +474,7 @@ export interface User {
     city: string;
     state: string;
     zipCode: string;
+    country?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -473,6 +495,11 @@ export interface Doctor {
     issuingOrganization: string;
     issueDate: Date;
     expiryDate: Date;
+  }>;
+  hospitalAffiliations?: Array<{
+    name?: string;
+    address?: string;
+    position?: string;
   }>;
   experience: {
     years: number;
@@ -495,6 +522,8 @@ export interface Doctor {
       startTime: string;
       endTime: string;
     };
+    appointmentDuration?: number;
+    maxDailyAppointments?: number;
   };
   // Virtual fields
   primarySpecialty?: string;

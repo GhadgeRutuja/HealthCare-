@@ -105,6 +105,18 @@ const doctorSchema = new mongoose.Schema({
       endTime: { type: String, default: '13:00' }
     }
   },
+  appointmentDuration: {
+    type: Number,
+    default: 30,
+    min: 15,
+    max: 120
+  },
+  maxDailyAppointments: {
+    type: Number,
+    default: 16,
+    min: 1,
+    max: 50
+  },
   consultationFee: {
     type: Number,
     required: [true, 'Consultation fee is required'],
@@ -194,7 +206,6 @@ doctorSchema.virtual('ratingDisplay').get(function() {
 });
 
 // Indexes for better query performance
-doctorSchema.index({ 'user': 1 });
 doctorSchema.index({ 'specialties': 1 });
 doctorSchema.index({ 'rating.average': -1 });
 doctorSchema.index({ 'status': 1 });

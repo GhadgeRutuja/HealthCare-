@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import PrescriptionManagement from '@/components/doctor/PrescriptionManagement';
 import AppointmentManagement from '@/components/doctor/AppointmentManagement';
 import PatientManagement from '@/components/doctor/PatientManagement';
@@ -12,6 +13,7 @@ import DoctorSettings from '@/components/doctor/DoctorSettings';
 import NotificationCenter from '@/components/doctor/NotificationCenter';
 import ChatInterface from '../chat/ChatInterface';
 import TelemedicineSystem from '@/components/doctor/TelemedicineSystem';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar, 
   Users, 
@@ -36,40 +38,54 @@ import {
   Building,
   LayoutDashboard,
   LogOut,
-  UserCheck
+  UserCheck,
+  AlertCircle
 } from 'lucide-react';
-import { User as UserType, appointmentsApi, usersApi } from '@/services/api';
+import { User as UserType, appointmentsApi } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DoctorDashboardProps {
   user: UserType;
 }
 
 const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
+  const { doctorProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAppointmentView, setSelectedAppointmentView] = useState<any>(null);
 
   // Fetch real data on component mount
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
         setLoading(true);
-        const [appointmentsRes, patientsRes] = await Promise.all([
-          appointmentsApi.getAll(),
-          usersApi.getPatients() // Getting all patients for now
-        ]);
+        const [appointmentsRes] = await Promise.all([appointmentsApi.getAll()]);
         
         if (appointmentsRes.success) {
           setAppointments(appointmentsRes.data);
         }
-        if (patientsRes.success) {
-          setPatients(patientsRes.data);
+        if (appointmentsRes.success) {
+          const doctorAppointments = appointmentsRes.data as any[];
+          const patientIds = new Set(
+            doctorAppointments
+              .map((appointment) =>
+                typeof appointment.patient === 'string'
+                  ? appointment.patient
+                  : appointment.patient?._id
+              )
+              .filter(Boolean)
+          );
+          setPatients(Array.from(patientIds) as any);
+          setPrescriptions(
+            doctorAppointments.filter((appointment) =>
+              appointment.prescription?.medications?.length ||
+              appointment.prescription?.notes
+            ) as any
+          );
         }
-        
-        // Prescriptions API might not be fully implemented, leaving empty for now
-        setPrescriptions([]);
       } catch (error) {
         console.error('Failed to fetch doctor data:', error);
       } finally {
@@ -80,6 +96,24 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
     fetchDoctorData();
   }, [user._id]);
 
+  const isToday = (date: string | Date) => {
+    const appointmentDate = new Date(date);
+    const today = new Date();
+    return appointmentDate.getFullYear() === today.getFullYear()
+      && appointmentDate.getMonth() === today.getMonth()
+      && appointmentDate.getDate() === today.getDate();
+  };
+
+  const todaysAppointments = appointments.filter((appointment: any) =>
+    isToday(appointment.appointmentDate)
+  );
+  const criticalCases = appointments.filter((appointment: any) =>
+    appointment.isEmergency || ['high', 'urgent'].includes(appointment.priority)
+  ).length;
+  const followUps = appointments.filter((appointment: any) =>
+    appointment.followUpRequired || appointment.followUpDate
+  ).length;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
@@ -87,6 +121,19 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
       case 'completed': return 'bg-blue-100 text-blue-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleStatusChange = async (appointmentId: string, newStatus: string) => {
+    try {
+      await appointmentsApi.update(appointmentId, { status: newStatus as any });
+      setAppointments((prev: any) => 
+        prev.map((apt: any) => 
+          apt._id === appointmentId ? { ...apt, status: newStatus } : apt
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update status', error);
     }
   };
 
@@ -100,9 +147,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
     { id: 'appointments', label: 'Appointments', icon: Calendar },
     { id: 'patients', label: 'Patients', icon: Users },
     { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
-    { id: 'telemedicine', label: 'Telemedicine', icon: Video },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -193,7 +238,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                   <CardContent className="p-6 flex justify-between items-center">
                     <div>
                       <p className="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Today's Appointments</p>
-                      <p className="text-4xl font-bold text-stroke-blue tracking-tight">{appointments.length}</p>
+                      <p className="text-4xl font-bold text-stroke-blue tracking-tight">{todaysAppointments.length}</p>
                     </div>
                     <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-stroke-blue text-white shadow-sm shadow-stroke-blue/30">
                       <Calendar className="h-6 w-6" />
@@ -229,7 +274,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                   <CardContent className="p-6 flex justify-between items-center">
                     <div>
                       <p className="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Critical Cases</p>
-                      <p className="text-4xl font-bold text-stroke-red tracking-tight">4</p>
+                      <p className="text-4xl font-bold text-stroke-red tracking-tight">{criticalCases}</p>
                     </div>
                     <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-stroke-red text-white shadow-sm shadow-stroke-red/30">
                       <Activity className="h-6 w-6" />
@@ -241,7 +286,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                   <CardContent className="p-6 flex justify-between items-center">
                     <div>
                       <p className="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Follow-ups</p>
-                      <p className="text-4xl font-bold text-stroke-cyan tracking-tight">3</p>
+                      <p className="text-4xl font-bold text-stroke-cyan tracking-tight">{followUps}</p>
                     </div>
                     <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-stroke-cyan text-white shadow-sm shadow-stroke-cyan/30">
                       <Calendar className="h-6 w-6" />
@@ -268,7 +313,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                           <Loader2 className="h-8 w-8 animate-spin text-stroke-blue mx-auto mb-4" />
                           <p className="text-slate-500 text-sm">Loading appointments...</p>
                         </div>
-                      ) : appointments.length > 0 ? (
+                      ) : todaysAppointments.length > 0 ? (
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm text-left">
                             <thead className="text-xs text-slate-500 bg-slate-50/50 uppercase font-semibold border-b border-slate-100">
@@ -281,43 +326,31 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                              {/* Sample Data to match reference aesthetic, real data should map here */}
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-8 py-4 font-medium text-slate-700">PAT-2026-4889</td>
-                                <td className="px-8 py-4 text-slate-700">Yashraj Thube</td>
-                                <td className="px-8 py-4">
-                                  <Badge className="bg-stroke-green hover:bg-stroke-green/90 text-white rounded-[4px] px-2.5 py-0.5 font-medium border-0">Normal</Badge>
-                                </td>
-                                <td className="px-8 py-4 text-slate-600">09:00 AM</td>
-                                <td className="px-8 py-4 text-right">
-                                  <Button variant="outline" size="sm" className="h-8 border-stroke-blue/40 text-stroke-blue hover:bg-stroke-blue hover:text-white rounded-[6px] transition-colors">
-                                    <Eye className="h-3.5 w-3.5 mr-1.5" /> View
-                                  </Button>
-                                </td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-8 py-4 font-medium text-slate-700">PAT-2026-4890</td>
-                                <td className="px-8 py-4 text-slate-700">Emma Davis</td>
-                                <td className="px-8 py-4">
-                                  <Badge className="bg-stroke-red hover:bg-stroke-red/90 text-white rounded-[4px] px-2.5 py-0.5 font-medium border-0">Critical</Badge>
-                                </td>
-                                <td className="px-8 py-4 text-slate-600">10:30 AM</td>
-                                <td className="px-8 py-4 text-right">
-                                  <Button variant="outline" size="sm" className="h-8 border-stroke-blue/40 text-stroke-blue hover:bg-stroke-blue hover:text-white rounded-[6px] transition-colors">
-                                    <Eye className="h-3.5 w-3.5 mr-1.5" /> View
-                                  </Button>
-                                </td>
-                              </tr>
-                              {appointments.map((appointment: any) => (
+                              {/* Real data mapping */}
+                              {todaysAppointments.map((appointment: any) => (
                                 <tr key={appointment._id} className="hover:bg-slate-50/50 transition-colors">
                                   <td className="px-8 py-4 font-medium text-slate-700">PAT-{appointment.patient?._id?.substring(0, 6).toUpperCase()}</td>
                                   <td className="px-8 py-4 text-slate-700">{appointment.patient?.firstName} {appointment.patient?.lastName}</td>
                                   <td className="px-8 py-4">
-                                    <Badge className={`${getStatusColor(appointment.status)} rounded-[4px] px-2.5 py-0.5 font-medium border-0`}>{appointment.status}</Badge>
+                                    <Select 
+                                      value={appointment.status} 
+                                      onValueChange={(val) => handleStatusChange(appointment._id, val)}
+                                    >
+                                      <SelectTrigger className={`h-7 w-[110px] text-xs font-medium border-0 ${getStatusColor(appointment.status)}`}>
+                                        <SelectValue placeholder="Status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="scheduled">Scheduled (Pending)</SelectItem>
+                                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                                        <SelectItem value="in_progress">In Progress</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </td>
                                   <td className="px-8 py-4 text-slate-600">{appointment.appointmentTime}</td>
                                   <td className="px-8 py-4 text-right space-x-2">
-                                    <Button variant="outline" size="sm" className="h-8 border-stroke-blue/40 text-stroke-blue hover:bg-stroke-blue hover:text-white rounded-[6px] transition-colors">
+                                    <Button variant="outline" size="sm" className="h-8 border-stroke-blue/40 text-stroke-blue hover:bg-stroke-blue hover:text-white rounded-[6px] transition-colors" onClick={() => setSelectedAppointmentView({ patientName: `${appointment.patient?.firstName} ${appointment.patient?.lastName}`, status: appointment.status, appointmentTime: appointment.appointmentTime, _id: appointment._id })}>
                                       <Eye className="h-3.5 w-3.5 mr-1.5" /> View
                                     </Button>
                                     <Button 
@@ -364,7 +397,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                           <Calendar className="h-5 w-5 mr-3 opacity-90" />
                           View Schedule
                         </div>
-                        <span className="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">{appointments.length}</span>
+                        <span className="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">{todaysAppointments.length}</span>
                       </Button>
                       
                       <Button 
@@ -399,10 +432,17 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
                         </Avatar>
                         <div>
                           <h3 className="font-bold text-slate-800 text-lg leading-tight">Dr. {user.firstName} {user.lastName}</h3>
-                          <p className="text-sm text-slate-500 mt-0.5 flex items-center">
-                            <ShieldCheck className="h-3.5 w-3.5 mr-1 text-stroke-green" />
-                            Verified Provider
-                          </p>
+                          {doctorProfile?.status === 'active' || doctorProfile?.isVerified ? (
+                            <p className="text-sm text-slate-500 mt-0.5 flex items-center">
+                              <ShieldCheck className="h-3.5 w-3.5 mr-1 text-stroke-green" />
+                              Verified Provider
+                            </p>
+                          ) : (
+                            <p className="text-sm text-amber-600 mt-0.5 flex items-center font-medium">
+                              <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                              Pending Verification
+                            </p>
+                          )}
                         </div>
                     </div>
                     <CardContent className="p-6">
@@ -438,15 +478,11 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
             </TabsContent>
 
             <TabsContent value="patients" className="mt-0 focus-visible:outline-none">
-              <PatientManagement user={user} />
+              <PatientManagement user={user} setActiveTab={setActiveTab} />
             </TabsContent>
 
             <TabsContent value="prescriptions" className="mt-0 focus-visible:outline-none">
               <PrescriptionManagement doctor={user} />
-            </TabsContent>
-
-            <TabsContent value="telemedicine" className="mt-0 focus-visible:outline-none">
-              <TelemedicineSystem user={user} />
             </TabsContent>
 
             <TabsContent value="messages" className="mt-0 focus-visible:outline-none">
@@ -456,19 +492,62 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ user }) => {
               </div>
             </TabsContent>
 
-            <TabsContent value="notifications" className="mt-0 focus-visible:outline-none">
-              <NotificationCenter user={user} />
-            </TabsContent>
-
             <TabsContent value="analytics" className="mt-0 focus-visible:outline-none">
-              <AnalyticsReports user={user} />
+              <AnalyticsReports user={user} doctorProfile={doctorProfile} />
             </TabsContent>
 
             <TabsContent value="settings" className="mt-0 focus-visible:outline-none">
-              <DoctorSettings user={user} />
+              <DoctorSettings user={user} doctorProfile={doctorProfile} />
             </TabsContent>
           </Tabs>
         </div>
+
+        <Dialog open={!!selectedAppointmentView} onOpenChange={(open) => !open && setSelectedAppointmentView(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Appointment Details</DialogTitle>
+              <DialogDescription>
+                Detailed view of the appointment schedule.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedAppointmentView && (
+              <div className="space-y-4 mt-4 text-sm">
+                <div className="grid grid-cols-3 items-center gap-4 border-b pb-3 border-slate-100">
+                  <span className="font-semibold col-span-1 text-slate-500">Patient</span>
+                  <span className="col-span-2 text-slate-900 font-medium">{selectedAppointmentView.patientName}</span>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4 border-b pb-3 border-slate-100">
+                  <span className="font-semibold col-span-1 text-slate-500">Time</span>
+                  <span className="col-span-2 text-slate-900 font-medium">{selectedAppointmentView.appointmentTime}</span>
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4 border-b pb-3 border-slate-100">
+                  <span className="font-semibold col-span-1 text-slate-500">Status</span>
+                  <span className="col-span-2 text-slate-900">
+                    <Badge className={`${getStatusColor(selectedAppointmentView.status)} rounded-[4px] px-2.5 py-0.5 font-medium border-0`}>
+                      {selectedAppointmentView.status}
+                    </Badge>
+                  </span>
+                </div>
+                {selectedAppointmentView._id && (
+                  <div className="grid grid-cols-3 items-center gap-4 border-b pb-3 border-slate-100">
+                    <span className="font-semibold col-span-1 text-slate-500">Appt ID</span>
+                    <span className="col-span-2 text-slate-900 text-xs font-mono">{selectedAppointmentView._id}</span>
+                  </div>
+                )}
+                
+                <div className="pt-4 flex justify-end gap-3">
+                   <Button variant="outline" onClick={() => setSelectedAppointmentView(null)}>Close</Button>
+                   <Button className="bg-stroke-blue text-white hover:bg-stroke-blue/90" onClick={() => {
+                     setSelectedAppointmentView(null);
+                     setActiveTab('appointments');
+                   }}>
+                     Manage
+                   </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

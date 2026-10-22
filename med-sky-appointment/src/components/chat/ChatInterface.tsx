@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { messagesApi } from '@/services/api';
+import { messagesApi, usersApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,7 +18,32 @@ const ChatInterface: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        try {
+          const res = await usersApi.getAll({ search: searchQuery });
+          if (res.success) {
+            setSearchResults(res.data);
+          }
+        } catch (error) {
+          console.error('Failed to search users:', error);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchContacts();
@@ -103,12 +128,25 @@ const ChatInterface: React.FC = () => {
         setMessages(prev => [...prev, res.data]);
         setNewMessage('');
         
-        // Update contact last message
-        setContacts(prev => prev.map(c => 
-          c.contactId === activeContact.contactId 
-            ? { ...c, lastMessage: res.data.content, timestamp: res.data.createdAt } 
-            : c
-        ));
+        // Update contact last message or add new contact
+        setContacts(prev => {
+          const exists = prev.find(c => c.contactId === activeContact.contactId);
+          if (exists) {
+            return prev.map(c => 
+              c.contactId === activeContact.contactId 
+                ? { ...c, lastMessage: res.data.content, timestamp: res.data.createdAt } 
+                : c
+            );
+          } else {
+            return [{
+              contactId: activeContact.contactId,
+              user: activeContact.user,
+              lastMessage: res.data.content,
+              timestamp: res.data.createdAt,
+              unreadCount: 0
+            }, ...prev];
+          }
+        });
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -133,29 +171,80 @@ const ChatInterface: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[600px] w-full bg-white rounded-2xl shadow-sm border border-slate-200">
-        <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+      <div className="flex items-center justify-center h-[500px] w-full bg-white rounded-2xl shadow-sm border border-slate-200">
+        <Loader2 className="h-7 w-7 animate-spin text-sky-600" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[600px] w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex h-[500px] w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       
       {/* Left Panel - Contacts list */}
-      <div className="w-1/3 min-w-[280px] border-r border-slate-200 flex flex-col bg-slate-50/50">
-        <div className="p-4 border-b border-slate-200">
+      <div className="w-1/3 min-w-[240px] border-r border-slate-200 flex flex-col bg-slate-50/50">
+        <div className="p-3 border-b border-slate-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search conversations..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search conversations or users..." 
               className="pl-9 bg-white border-slate-200 focus-visible:ring-sky-500 rounded-full"
             />
           </div>
         </div>
         
         <ScrollArea className="flex-1">
-          {contacts.length === 0 ? (
+          {searchQuery.trim() ? (
+            isSearching ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                <p className="text-sm">No users found</p>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {searchResults.map((searchUser) => (
+                  <button
+                    key={searchUser._id}
+                    onClick={() => {
+                      const existingContact = contacts.find(c => c.contactId === searchUser._id);
+                      if (existingContact) {
+                        setActiveContact(existingContact);
+                      } else {
+                        setActiveContact({
+                          contactId: searchUser._id,
+                          user: searchUser,
+                          lastMessage: 'Start a new conversation',
+                          timestamp: new Date().toISOString(),
+                          unreadCount: 0
+                        });
+                      }
+                      setSearchQuery('');
+                    }}
+                    className={`flex items-center gap-3 p-3 text-left transition-colors border-b border-slate-100 hover:bg-slate-100/80`}
+                  >
+                    <Avatar className="h-10 w-10 border border-slate-200">
+                      <AvatarImage src={searchUser.profileImage} />
+                      <AvatarFallback className="bg-sky-100 text-sky-700">
+                        {searchUser.firstName?.[0] || ''}{searchUser.lastName?.[0] || ''}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="font-semibold text-slate-900 truncate">
+                        {searchUser.role === 'doctor' ? 'Dr. ' : ''}{searchUser.firstName} {searchUser.lastName}
+                      </p>
+                      <p className="text-sm text-slate-500 truncate capitalize">
+                        {searchUser.role}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : contacts.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               <MessageSquare className="h-8 w-8 mx-auto mb-3 opacity-50" />
               <p className="text-sm">No active conversations</p>
@@ -166,14 +255,14 @@ const ChatInterface: React.FC = () => {
                 <button
                   key={contact.contactId}
                   onClick={() => setActiveContact(contact)}
-                  className={`flex items-center gap-3 p-4 text-left transition-colors border-b border-slate-100 last:border-0 ${
+                  className={`flex items-center gap-3 p-3 text-left transition-colors border-b border-slate-100 last:border-0 ${
                     activeContact?.contactId === contact.contactId 
                       ? 'bg-sky-50 hover:bg-sky-50/80 relative after:absolute after:left-0 after:top-0 after:h-full after:w-1 after:bg-sky-500' 
                       : 'hover:bg-slate-100/80'
                   }`}
                 >
                   <div className="relative">
-                    <Avatar className="h-12 w-12 border border-slate-200">
+                    <Avatar className="h-10 w-10 border border-slate-200">
                       <AvatarImage src={contact.user.profileImage} />
                       <AvatarFallback className="bg-sky-100 text-sky-700">
                         {contact.user.firstName[0]}{contact.user.lastName[0]}
@@ -211,8 +300,8 @@ const ChatInterface: React.FC = () => {
         {activeContact ? (
           <>
             {/* Chat Header */}
-            <div className="h-16 border-b border-slate-200 flex items-center px-6 bg-white shrink-0 shadow-sm z-10">
-              <Avatar className="h-10 w-10 mr-4 border border-slate-200">
+            <div className="h-14 border-b border-slate-200 flex items-center px-4 bg-white shrink-0 shadow-sm z-10">
+              <Avatar className="h-9 w-9 mr-3 border border-slate-200">
                 <AvatarImage src={activeContact.user.profileImage} />
                 <AvatarFallback className="bg-sky-100 text-sky-700">
                   {activeContact.user.firstName[0]}{activeContact.user.lastName[0]}
@@ -227,7 +316,7 @@ const ChatInterface: React.FC = () => {
             </div>
 
             {/* Chat Messages */}
-            <ScrollArea className="flex-1 p-6 bg-slate-50/30">
+            <ScrollArea className="flex-1 p-4 bg-slate-50/30">
               {loadingMessages ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
@@ -238,7 +327,7 @@ const ChatInterface: React.FC = () => {
                   <p>Send a message to start the conversation</p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {messages.map((msg, idx) => {
                     // Check if sender is me (could be populated object or just string ID)
                     const isMe = (msg.sender._id || msg.sender) === user?._id;
@@ -280,13 +369,13 @@ const ChatInterface: React.FC = () => {
             </ScrollArea>
 
             {/* Chat Input */}
-            <div className="p-4 border-t border-slate-200 bg-white shrink-0">
-              <form onSubmit={handleSendMessage} className="flex gap-3">
+            <div className="p-3 border-t border-slate-200 bg-white shrink-0">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 bg-slate-100/50 border-slate-200 rounded-full px-6 focus-visible:ring-sky-500"
+                  className="flex-1 bg-slate-100/50 border-slate-200 rounded-full px-4 focus-visible:ring-sky-500"
                 />
                 <Button 
                   type="submit" 

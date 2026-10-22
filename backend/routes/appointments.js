@@ -29,7 +29,7 @@ router.get('/', protect, async (req, res) => {
       
       // Find all appointments for this doctor
       appointments = await Appointment.find({ doctor: doctorProfile._id })
-        .populate('patient', 'firstName lastName email profileImage')
+        .populate('patient', 'firstName lastName email profileImage dateOfBirth gender')
         .sort({ appointmentDate: 1, appointmentTime: 1 });
     } else {
       // Admin - return all
@@ -59,26 +59,56 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.post('/', protect, async (req, res) => {
   try {
-    const { doctor, appointmentDate, appointmentTime, reason, notes } = req.body;
+    const { doctor, patientId, appointmentDate, appointmentTime, reason, notes } = req.body;
 
-    if (!doctor || !appointmentDate || !appointmentTime || !reason) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide doctor, date, time, and reason'
-      });
+    let targetDoctorId = doctor;
+    let targetPatientId = req.user._id;
+
+    let doctorExists;
+    if (req.user.role === 'doctor') {
+      // Doctor is creating the appointment
+      doctorExists = await Doctor.findOne({ user: req.user._id });
+      if (!doctorExists) {
+        return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+      }
+      targetDoctorId = doctorExists._id;
+      if (!patientId) {
+        return res.status(400).json({ success: false, message: 'Please select a patient' });
+      }
+      targetPatientId = patientId;
+    } else if (req.user.role === 'admin') {
+      // Admin is creating the appointment
+      if (!targetDoctorId) {
+        return res.status(400).json({ success: false, message: 'Please select a doctor' });
+      }
+      if (!patientId) {
+        return res.status(400).json({ success: false, message: 'Please select a patient' });
+      }
+      targetPatientId = patientId;
+      doctorExists = await Doctor.findById(targetDoctorId);
+      if (!doctorExists) {
+        return res.status(404).json({ success: false, message: 'Doctor not found' });
+      }
+    } else {
+      // Patient is creating the appointment
+      if (!targetDoctorId) {
+        return res.status(400).json({ success: false, message: 'Please select a doctor' });
+      }
+      doctorExists = await Doctor.findById(targetDoctorId);
+      if (!doctorExists) {
+        return res.status(404).json({ success: false, message: 'Doctor not found' });
+      }
     }
 
-    // Check if doctor exists
-    const doctorExists = await Doctor.findById(doctor);
-    if (!doctorExists) {
-      return res.status(404).json({
+    if (!appointmentDate || !appointmentTime || !reason) {
+      return res.status(400).json({
         success: false,
-        message: 'Doctor not found'
+        message: 'Please provide date, time, and reason'
       });
     }
 
     // Check for conflict
-    const conflict = await Appointment.checkConflict(doctor, new Date(appointmentDate), appointmentTime);
+    const conflict = await Appointment.checkConflict(targetDoctorId, new Date(appointmentDate), appointmentTime);
     if (conflict) {
       return res.status(400).json({
         success: false,
@@ -87,8 +117,8 @@ router.post('/', protect, async (req, res) => {
     }
 
     const appointment = await Appointment.create({
-      patient: req.user._id,
-      doctor,
+      patient: targetPatientId,
+      doctor: targetDoctorId,
       appointmentDate: new Date(appointmentDate),
       appointmentTime,
       reason,
@@ -176,6 +206,47 @@ router.get('/:id', protect, async (req, res) => {
     });
   }
 });
+// @desc    Update an appointment
+// @route   PUT /api/appointments/:id
+// @access  Private (Doctor or Admin)
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const { status, appointmentDate, appointmentTime, reason, notes } = req.body;
+    const appointmentId = req.params.id;
+
+    let appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    // Verify ownership or admin rights
+    if (
+      req.user.role !== 'admin' && 
+      (req.user.role === 'doctor' && appointment.doctor.user._id.toString() !== req.user._id.toString())
+    ) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this appointment' });
+    }
+
+    if (status) appointment.status = status;
+    if (appointmentDate) appointment.appointmentDate = appointmentDate;
+    if (appointmentTime) appointment.appointmentTime = appointmentTime;
+    if (reason) appointment.reason = reason;
+    if (notes) appointment.notes = notes;
+
+    await appointment.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Appointment updated successfully',
+      data: appointment
+    });
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    res.status(500).json({ success: false, message: 'Server error while updating appointment' });
+  }
+});
+
 // @desc    Add or update prescription for an appointment
 // @route   PUT /api/appointments/:id/prescription
 // @access  Private (Doctor only)
@@ -239,6 +310,11 @@ router.put('/:id/prescription', protect, async (req, res) => {
       }
     }
 
+    res.status(200).json({
+      success: true,
+      message: 'Prescription added successfully',
+      data: updatedAppointment
+    });
 
   } catch (error) {
     console.error('Error adding prescription:', error);

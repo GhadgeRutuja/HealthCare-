@@ -18,6 +18,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import TelemedicineRoom from "./pages/TelemedicineRoom";
+import MedicalRecords from "./components/patient/MedicalRecords";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,16 @@ const LoadingScreen = () => (
     </div>
   </div>
 );
+
+const MedicalRecordsPage = () => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return <MedicalRecords user={user} />;
+};
 
 // App routes component that checks auth loading
 const AppRoutes = () => {
@@ -63,6 +74,7 @@ const AppRoutes = () => {
         <Route path="/signup/doctor" element={<SignUp />} />
         <Route path="/book-appointment" element={<BookingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/medical-records" element={<MedicalRecordsPage />} />
         <Route path="/telemedicine/:id" element={<TelemedicineRoom />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />

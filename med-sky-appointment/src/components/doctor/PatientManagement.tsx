@@ -37,10 +37,11 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import { User as UserType } from '@/services/api';
+import { User as UserType, appointmentsApi } from '@/services/api';
 
 interface PatientManagementProps {
   user: UserType;
+  setActiveTab?: (tab: string) => void;
 }
 
 interface Patient {
@@ -82,7 +83,7 @@ interface Patient {
   riskLevel: 'low' | 'medium' | 'high';
 }
 
-const PatientManagement: React.FC<PatientManagementProps> = ({ user }) => {
+const PatientManagement: React.FC<PatientManagementProps> = ({ user, setActiveTab }) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,20 +93,73 @@ const PatientManagement: React.FC<PatientManagementProps> = ({ user }) => {
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [expandedPatient, setExpandedPatient] = useState<string | null>(null);
+  const [modalView, setModalView] = useState<'details' | 'edit' | 'records'>('details');
 
   // Fetch patients
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await api.getDoctorPatients(user._id);
+        const res = await appointmentsApi.getAll();
         
-        // Mock data - will be replaced with real API
-        const mockPatients: Patient[] = [];
-        
-        setPatients(mockPatients);
-        setFilteredPatients(mockPatients);
+        if (res.success) {
+          const apts = res.data;
+          const patientMap = new Map();
+          
+          apts.forEach((apt: any) => {
+            if (apt.patient && !patientMap.has(apt.patient._id)) {
+              patientMap.set(apt.patient._id, {
+                id: apt.patient._id,
+                firstName: apt.patient.firstName || 'Unknown',
+                lastName: apt.patient.lastName || '',
+                email: apt.patient.email || 'N/A',
+                phone: apt.patient.phone || 'N/A',
+                dateOfBirth: apt.patient.dateOfBirth || '1990-01-01',
+                gender: apt.patient.gender || 'other',
+                address: apt.patient.address || {
+                  street: 'Not provided',
+                  city: 'Not provided',
+                  state: '',
+                  zipCode: ''
+                },
+                emergencyContact: {
+                  name: 'Not provided',
+                  phone: 'Not provided',
+                  relationship: 'Not provided'
+                },
+                medicalHistory: {
+                  allergies: [],
+                  chronicConditions: [],
+                  medications: [],
+                  bloodType: 'Unknown',
+                  lastVisit: new Date(apt.appointmentDate).toLocaleDateString()
+                },
+                insurance: {
+                  provider: 'Not provided',
+                  policyNumber: 'N/A',
+                  groupNumber: 'N/A'
+                },
+                status: apt.patient.isActive !== false ? 'active' : 'inactive',
+                avatar: apt.patient.profileImage,
+                totalAppointments: apts.filter((a: any) => a.patient?._id === apt.patient._id).length,
+                lastAppointment: new Date(apt.appointmentDate).toLocaleDateString(),
+                riskLevel: 'low'
+              });
+            } else if (apt.patient) {
+              // Update last appointment date if this one is more recent
+              const existing = patientMap.get(apt.patient._id);
+              const aptDate = new Date(apt.appointmentDate);
+              const existingDate = new Date(existing.lastAppointment);
+              if (aptDate > existingDate) {
+                existing.lastAppointment = aptDate.toLocaleDateString();
+              }
+            }
+          });
+          
+          const patientList = Array.from(patientMap.values());
+          setPatients(patientList);
+          setFilteredPatients(patientList);
+        }
       } catch (error) {
         console.error('Failed to fetch patients:', error);
       } finally {
@@ -155,6 +209,7 @@ const PatientManagement: React.FC<PatientManagementProps> = ({ user }) => {
 
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
+    setModalView('details');
     setShowPatientDetails(true);
   };
 
@@ -458,13 +513,15 @@ const PatientManagement: React.FC<PatientManagementProps> = ({ user }) => {
       <Dialog open={showPatientDetails} onOpenChange={setShowPatientDetails}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Patient Details</DialogTitle>
+            <DialogTitle>
+              {modalView === 'edit' ? 'Edit Patient' : modalView === 'records' ? 'Patient Records' : 'Patient Details'}
+            </DialogTitle>
             <DialogDescription>
-              Complete patient information and medical history
+              {modalView === 'edit' ? 'Update patient information' : modalView === 'records' ? 'View medical history and records' : 'Complete patient information and medical history'}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedPatient && (
+          {selectedPatient && modalView === 'details' && (
             <div className="space-y-6">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-20 w-20">
@@ -579,22 +636,78 @@ const PatientManagement: React.FC<PatientManagementProps> = ({ user }) => {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => setModalView('records')}>
                   <FileText className="h-4 w-4 mr-2" />
                   View Records
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => {
+                  setActiveTab?.('prescriptions');
+                  setShowPatientDetails(false);
+                }}>
                   <Pill className="h-4 w-4 mr-2" />
                   Prescriptions
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => {
+                  setActiveTab?.('appointments');
+                  setShowPatientDetails(false);
+                }}>
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Appointment
                 </Button>
-                <Button>
+                <Button onClick={() => setModalView('edit')} className="bg-sky-600 hover:bg-sky-700 text-white">
                   <Edit3 className="h-4 w-4 mr-2" />
                   Edit Patient
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {selectedPatient && modalView === 'edit' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>First Name</Label>
+                  <Input defaultValue={selectedPatient.firstName} />
+                </div>
+                <div>
+                  <Label>Last Name</Label>
+                  <Input defaultValue={selectedPatient.lastName} />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input defaultValue={selectedPatient.email} />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input defaultValue={selectedPatient.phone} />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Address</Label>
+                  <Input defaultValue={`${selectedPatient.address.street}, ${selectedPatient.address.city}`} />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => setModalView('details')}>Cancel</Button>
+                <Button className="bg-sky-600 hover:bg-sky-700 text-white" onClick={() => setModalView('details')}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {selectedPatient && modalView === 'records' && (
+            <div className="space-y-6">
+              <div className="border border-dashed border-gray-300 rounded-lg p-12 flex flex-col items-center justify-center text-gray-500 bg-gray-50/50">
+                <FileText className="h-16 w-16 mb-4 text-gray-300" />
+                <p className="text-lg font-medium text-gray-700">No medical records found</p>
+                <p className="text-sm text-gray-500 mb-6 mt-1">There are no historical records uploaded for this patient.</p>
+                <Button variant="outline" className="border-sky-200 text-sky-700 hover:bg-sky-50">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload Record
+                </Button>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => setModalView('details')}>Back to Details</Button>
               </div>
             </div>
           )}

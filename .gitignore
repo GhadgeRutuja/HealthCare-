@@ -83,6 +83,16 @@ jspm_packages/
 .cache/
 public
 
+# Leadership portraits used by the About page
+!med-sky-appointment/public/
+!med-sky-appointment/public/assets/
+!med-sky-appointment/public/assets/doctor-placeholder-female.svg
+!med-sky-appointment/public/assets/doctor-placeholder-male.svg
+!med-sky-appointment/public/assets/doctor-james-chen.jpg
+!med-sky-appointment/public/assets/doctor-emily-rodriguez.jpg
+!med-sky-appointment/public/assets/doctor-james-chen.svg
+!med-sky-appointment/public/assets/doctor-emily-rodriguez.svg
+
 # Vuepress build output
 .vuepress/dist
 

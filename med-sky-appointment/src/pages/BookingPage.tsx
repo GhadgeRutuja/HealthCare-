@@ -7,6 +7,7 @@ import AppointmentBooking from '@/components/booking/AppointmentBooking';
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
   const doctorName = searchParams.get('doctor');
+  const doctorId = searchParams.get('doctorId');
   const specialty = searchParams.get('specialty');
 
   return (
@@ -14,6 +15,7 @@ const BookingPage = () => {
       <Navbar />
       <AppointmentBooking 
         preselectedDoctor={doctorName}
+        preselectedDoctorId={doctorId}
         preselectedSpecialty={specialty}
       />
     </div>

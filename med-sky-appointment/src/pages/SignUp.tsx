@@ -5,11 +5,11 @@ import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   User, 
   Mail, 
@@ -17,9 +17,7 @@ import {
   Lock, 
   Calendar, 
   MapPin,
-  UserCheck,
   Stethoscope,
-  Shield,
   GraduationCap,
   Award,
   DollarSign,
@@ -42,7 +40,7 @@ const SignUp = () => {
     ? (userTypeFromUrl as 'patient' | 'doctor') 
     : 'patient';
   
-  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | 'admin'>(initialRole);
+  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor'>(initialRole);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -106,27 +104,6 @@ const SignUp = () => {
     }
   };
 
-  const handleArrayChange = (field: 'specialties' | 'languages', index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].map((item, i) => i === index ? value : item)
-    }));
-  };
-
-  const addArrayField = (field: 'specialties' | 'languages') => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], '']
-    }));
-  };
-
-  const removeArrayField = (field: 'specialties' | 'languages', index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-  };
-
   const handleEducationChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
@@ -176,7 +153,6 @@ const SignUp = () => {
     }
 
     try {
-      // Filter out empty specialties
       const cleanSpecialties = formData.specialties.filter(s => s && s.trim());
       const cleanLanguages = formData.languages.filter(l => l && l.trim());
       
@@ -202,509 +178,427 @@ const SignUp = () => {
         })
       };
 
-      console.log('📝 Submitting form data:', userData);
       await register(userData);
       navigate('/dashboard');
     } catch (error) {
-      console.error('❌ Registration error:', error);
-      // Error is handled by the context
+      // Error handled by context
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 selection:bg-sky-200 selection:text-sky-900 relative overflow-hidden flex flex-col">
       <Navbar />
       
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[60%] w-[50%] h-[50%] rounded-full bg-sky-200/40 blur-[120px] animate-pulse-soft" />
+        <div className="absolute top-[40%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-300/30 blur-[100px] animate-float" style={{ animationDelay: '2s' }} />
+      </div>
+      
+      <div className="flex-1 py-12 px-4 sm:px-6 lg:px-8 relative z-10 flex items-center justify-center">
+        <div className="w-full max-w-4xl animate-slide-up">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
-            <p className="text-gray-600">Join MediCare and start your healthcare journey</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">Create Your Account</h1>
+            <p className="text-lg text-slate-600">Join MediCare and start your healthcare journey</p>
           </div>
 
-          <Card className="shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-center">Sign Up</CardTitle>
-              
-              {/* Role Selection */}
-              <Tabs value={selectedRole} onValueChange={(value) => setSelectedRole(value as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="patient" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Patient
+          <div className="bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl rounded-[2rem] p-6 sm:p-10 relative overflow-hidden">
+             <div className="absolute -top-32 -right-32 w-64 h-64 bg-sky-100 rounded-full blur-3xl opacity-60 pointer-events-none" />
+             
+             <div className="relative z-10">
+              <Tabs value={selectedRole} onValueChange={(value) => setSelectedRole(value as 'patient' | 'doctor')} className="w-full mb-10">
+                <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-slate-100/50 p-1.5 rounded-xl">
+                  <TabsTrigger value="patient" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-sky-600 transition-all font-semibold py-2.5 flex items-center justify-center gap-2">
+                    <User className="h-4 w-4" /> Patient
                   </TabsTrigger>
-                  <TabsTrigger value="doctor" className="flex items-center gap-2">
-                    <Stethoscope className="h-4 w-4" />
-                    Doctor
-                  </TabsTrigger>
-                  <TabsTrigger value="admin" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Admin
+                  <TabsTrigger value="doctor" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 transition-all font-semibold py-2.5 flex items-center justify-center gap-2">
+                    <Stethoscope className="h-4 w-4" /> Doctor
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-            </CardHeader>
 
-            <CardContent>
               {error && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert variant="destructive" className="mb-8 rounded-xl border-red-200 bg-red-50 text-red-800">
+                  <AlertDescription className="font-medium text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="firstName">First Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Label htmlFor="firstName" className="text-sm font-semibold text-slate-700">First Name *</Label>
+                    <div className="relative mt-2 group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="firstName"
                         name="firstName"
                         type="text"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="pl-10"
-                        placeholder="Enter first name"
+                        className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
+                        placeholder="First name"
                       />
                     </div>
-                    {formErrors.firstName && <p className="text-red-500 text-sm mt-1">{formErrors.firstName}</p>}
+                    {formErrors.firstName && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.firstName}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Label htmlFor="lastName" className="text-sm font-semibold text-slate-700">Last Name *</Label>
+                    <div className="relative mt-2 group">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="lastName"
                         name="lastName"
                         type="text"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="pl-10"
-                        placeholder="Enter last name"
+                        className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
+                        placeholder="Last name"
                       />
                     </div>
-                    {formErrors.lastName && <p className="text-red-500 text-sm mt-1">{formErrors.lastName}</p>}
+                    {formErrors.lastName && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.lastName}</p>}
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="pl-10"
-                      placeholder="Enter email address"
-                    />
-                  </div>
-                  {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="pl-10"
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="password">Password *</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Label htmlFor="email" className="text-sm font-semibold text-slate-700">Email Address *</Label>
+                    <div className="relative mt-2 group">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
+                        placeholder="name@example.com"
+                      />
+                    </div>
+                    {formErrors.email && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">Phone Number *</Label>
+                    <div className="relative mt-2 group">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    {formErrors.phone && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.phone}</p>}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="password" className="text-sm font-semibold text-slate-700">Password *</Label>
+                    <div className="relative mt-2 group">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="pl-10 pr-10"
-                        placeholder="Enter password"
+                        className="pl-12 pr-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
+                        placeholder="Create a password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
-                    {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
+                    {formErrors.password && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.password}</p>}
                   </div>
 
                   <div>
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-700">Confirm Password *</Label>
+                    <div className="relative mt-2 group">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                       <Input
                         id="confirmPassword"
                         name="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
-                        className="pl-10 pr-10"
+                        className="pl-12 pr-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                         placeholder="Confirm password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                       >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
-                    {formErrors.confirmPassword && <p className="text-red-500 text-sm mt-1">{formErrors.confirmPassword}</p>}
+                    {formErrors.confirmPassword && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.confirmPassword}</p>}
                   </div>
                 </div>
 
                 {/* Patient-specific fields */}
                 {selectedRole === 'patient' && (
-                  <>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-8 border-t border-slate-200 pt-8 mt-8">
+                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <User className="h-6 w-6 text-sky-500" /> Patient Details
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">Date of Birth *</Label>
+                        <div className="relative mt-2 group">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
                           <Input
                             id="dateOfBirth"
                             name="dateOfBirth"
                             type="date"
                             value={formData.dateOfBirth}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                           />
                         </div>
-                        {formErrors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{formErrors.dateOfBirth}</p>}
+                        {formErrors.dateOfBirth && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.dateOfBirth}</p>}
                       </div>
 
                       <div>
-                        <Label htmlFor="gender">Gender *</Label>
-                        <Select value={formData.gender} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {formErrors.gender && <p className="text-red-500 text-sm mt-1">{formErrors.gender}</p>}
+                        <Label htmlFor="gender" className="text-sm font-semibold text-slate-700">Gender *</Label>
+                        <div className="mt-2">
+                          <Select value={formData.gender} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
+                            <SelectTrigger className="h-14 rounded-xl bg-white border-slate-200 focus:ring-sky-500 focus:border-sky-500 shadow-sm">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl shadow-xl">
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {formErrors.gender && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.gender}</p>}
                       </div>
                     </div>
 
-                    {/* Address */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <MapPin className="h-5 w-5" />
-                        Address Information
-                      </h3>
+                    <div className="space-y-6">
+                      <h4 className="font-semibold text-slate-900 flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-slate-400" /> Address Information
+                      </h4>
                       
                       <div>
-                        <Label htmlFor="address.street">Street Address</Label>
+                        <Label htmlFor="address.street" className="text-sm font-semibold text-slate-700">Street Address</Label>
                         <Input
                           id="address.street"
                           name="address.street"
                           type="text"
                           value={formData.address.street}
                           onChange={handleInputChange}
+                          className="mt-2 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                           placeholder="Enter street address"
                         />
                       </div>
 
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="address.city">City</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="col-span-2 md:col-span-1">
+                          <Label htmlFor="address.city" className="text-sm font-semibold text-slate-700">City</Label>
                           <Input
                             id="address.city"
                             name="address.city"
                             type="text"
                             value={formData.address.city}
                             onChange={handleInputChange}
+                            className="mt-2 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                             placeholder="City"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="address.state">State</Label>
+                          <Label htmlFor="address.state" className="text-sm font-semibold text-slate-700">State</Label>
                           <Input
                             id="address.state"
                             name="address.state"
                             type="text"
                             value={formData.address.state}
                             onChange={handleInputChange}
+                            className="mt-2 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                             placeholder="State"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="address.zipCode">ZIP Code</Label>
+                          <Label htmlFor="address.zipCode" className="text-sm font-semibold text-slate-700">ZIP Code</Label>
                           <Input
                             id="address.zipCode"
                             name="address.zipCode"
                             type="text"
                             value={formData.address.zipCode}
                             onChange={handleInputChange}
+                            className="mt-2 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-sky-500 focus-visible:border-sky-500 shadow-sm"
                             placeholder="ZIP Code"
                           />
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {/* Doctor-specific fields */}
                 {selectedRole === 'doctor' && (
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Stethoscope className="h-5 w-5" />
-                      Professional Information
+                  <div className="space-y-8 border-t border-slate-200 pt-8 mt-8">
+                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <Stethoscope className="h-6 w-6 text-blue-500" /> Professional Information
                     </h3>
 
                     <div>
-                      <Label htmlFor="licenseNumber">Medical License Number *</Label>
-                      <div className="relative">
-                        <Award className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Label htmlFor="licenseNumber" className="text-sm font-semibold text-slate-700">Medical License Number *</Label>
+                      <div className="relative mt-2 group">
+                        <Award className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <Input
                           id="licenseNumber"
                           name="licenseNumber"
                           type="text"
                           value={formData.licenseNumber}
                           onChange={handleInputChange}
-                          className="pl-10"
+                          className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm"
                           placeholder="Enter license number"
                         />
                       </div>
-                      {formErrors.licenseNumber && <p className="text-red-500 text-sm mt-1">{formErrors.licenseNumber}</p>}
+                      {formErrors.licenseNumber && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.licenseNumber}</p>}
                     </div>
 
                     {/* Specialties */}
                     <div>
-                      <Label>Medical Specialties *</Label>
-                      <p className="text-gray-600 text-sm mb-3">Choose from our list of recognized specialties</p>
+                      <Label className="text-sm font-semibold text-slate-700">Medical Specialties *</Label>
+                      <p className="text-slate-500 text-sm mt-1 mb-4">Choose from our list of recognized specialties</p>
                       
-                      <div className="space-y-2 mb-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          {['Cardiology', 'Neurology', 'Ophthalmology', 'Orthopedics', 'Pediatrics', 'General Medicine', 'Dermatology', 'Psychiatry', 'Radiology', 'Emergency Medicine', 'Surgery', 'Internal Medicine', 'Family Medicine', 'Oncology', 'Anesthesiology'].map((spec) => (
-                            <label key={spec} className="flex items-center gap-2 p-2 border rounded hover:bg-blue-50 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={formData.specialties.includes(spec)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    if (!formData.specialties.includes(spec)) {
-                                      setFormData(prev => ({
-                                        ...prev,
-                                        specialties: [...prev.specialties.filter(s => s), spec]
-                                      }));
-                                    }
-                                  } else {
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                        {['Cardiology', 'Neurology', 'Ophthalmology', 'Orthopedics', 'Pediatrics', 'General Medicine', 'Dermatology', 'Psychiatry', 'Radiology', 'Emergency Medicine', 'Surgery'].map((spec) => (
+                          <label key={spec} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                            <Checkbox
+                              checked={formData.specialties.includes(spec as any)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  if (!formData.specialties.includes(spec as never)) {
                                     setFormData(prev => ({
                                       ...prev,
-                                      specialties: prev.specialties.filter(s => s !== spec)
+                                      specialties: [...prev.specialties.filter(s => s), spec as never]
                                     }));
                                   }
-                                }}
-                                className="rounded"
-                              />
-                              <span className="text-sm">{spec}</span>
-                            </label>
-                          ))}
-                        </div>
+                                } else {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    specialties: prev.specialties.filter(s => s !== spec)
+                                  }));
+                                }
+                              }}
+                              className="rounded-md border-slate-300 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                            />
+                            <span className="text-sm font-medium text-slate-700">{spec}</span>
+                          </label>
+                        ))}
                       </div>
 
-                      {formData.specialties.length > 0 && formData.specialties[0] && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded">
-                          <p className="text-sm font-medium text-blue-900 mb-2">Selected Specialties:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {formData.specialties.filter(s => s).map((spec, idx) => (
-                              <span key={idx} className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                                {spec}
-                                <button
-                                  type="button"
-                                  onClick={() => setFormData(prev => ({
-                                    ...prev,
-                                    specialties: prev.specialties.filter((_, i) => i !== idx)
-                                  }))}
-                                  className="hover:text-blue-900"
-                                >
-                                  ✕
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {formErrors.specialties && <p className="text-red-500 text-sm mt-2">{formErrors.specialties}</p>}
+                      {formErrors.specialties && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.specialties}</p>}
                     </div>
 
                     {/* Education */}
                     <div className="space-y-4">
-                      <Label className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4" />
-                        Education *
+                      <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-slate-400" /> Education *
                       </Label>
                       <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Input
-                            placeholder="Degree (e.g., MD, MBBS)"
-                            value={formData.education[0]?.degree || ''}
-                            onChange={(e) => handleEducationChange('degree', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Input
-                            placeholder="Institution"
-                            value={formData.education[0]?.institution || ''}
-                            onChange={(e) => handleEducationChange('institution', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div>
                         <Input
-                          type="number"
-                          placeholder="Graduation Year"
-                          value={formData.education[0]?.graduationYear || ''}
-                          onChange={(e) => handleEducationChange('graduationYear', parseInt(e.target.value))}
+                          placeholder="Degree (e.g., MD, MBBS)"
+                          value={formData.education[0]?.degree || ''}
+                          onChange={(e) => handleEducationChange('degree', e.target.value)}
+                          className="h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm"
+                        />
+                        <Input
+                          placeholder="Institution Name"
+                          value={formData.education[0]?.institution || ''}
+                          onChange={(e) => handleEducationChange('institution', e.target.value)}
+                          className="h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm"
                         />
                       </div>
-                      {formErrors.education && <p className="text-red-500 text-sm mt-1">{formErrors.education}</p>}
+                      <Input
+                        type="number"
+                        placeholder="Graduation Year (e.g., 2015)"
+                        value={formData.education[0]?.graduationYear || ''}
+                        onChange={(e) => handleEducationChange('graduationYear', parseInt(e.target.value))}
+                        className="h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm w-full md:w-1/2"
+                      />
+                      {formErrors.education && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.education}</p>}
                     </div>
 
                     {/* Consultation Fee */}
                     <div>
-                      <Label htmlFor="consultationFee">Consultation Fee (USD) *</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Label htmlFor="consultationFee" className="text-sm font-semibold text-slate-700">Consultation Fee (USD) *</Label>
+                      <div className="relative mt-2 group">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <Input
                           id="consultationFee"
                           name="consultationFee"
                           type="number"
                           value={formData.consultationFee}
                           onChange={handleInputChange}
-                          className="pl-10"
-                          placeholder="Enter consultation fee"
+                          className="pl-12 h-14 rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm"
+                          placeholder="Enter consultation fee per session"
                         />
                       </div>
-                      {formErrors.consultationFee && <p className="text-red-500 text-sm mt-1">{formErrors.consultationFee}</p>}
-                    </div>
-
-                    {/* Languages */}
-                    <div>
-                      <Label className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        Languages Spoken
-                      </Label>
-                      <p className="text-gray-600 text-sm mb-3">Check the languages you speak fluently</p>
-                      
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {['English', 'Spanish', 'French', 'German', 'Mandarin', 'Hindi', 'Arabic', 'Portuguese'].map((lang) => (
-                          <label key={lang} className="flex items-center gap-2 p-2 border rounded hover:bg-blue-50 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.languages.includes(lang)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  if (!formData.languages.includes(lang)) {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      languages: [...prev.languages.filter(l => l), lang]
-                                    }));
-                                  }
-                                } else {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    languages: prev.languages.filter(l => l !== lang)
-                                  }));
-                                }
-                              }}
-                              className="rounded"
-                            />
-                            <span className="text-sm">{lang}</span>
-                          </label>
-                        ))}
-                      </div>
-
-                      {formData.languages.length > 0 && formData.languages[0] && (
-                        <div className="p-3 bg-green-50 rounded">
-                          <p className="text-sm font-medium text-green-900 mb-2">Selected Languages:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {formData.languages.filter(l => l).map((lang, idx) => (
-                              <span key={idx} className="bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                                {lang}
-                                <button
-                                  type="button"
-                                  onClick={() => setFormData(prev => ({
-                                    ...prev,
-                                    languages: prev.languages.filter((_, i) => i !== idx)
-                                  }))}
-                                  className="hover:text-green-900"
-                                >
-                                  ✕
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      {formErrors.consultationFee && <p className="text-red-500 text-sm mt-1.5 font-medium">{formErrors.consultationFee}</p>}
                     </div>
 
                     {/* Bio */}
                     <div>
-                      <Label htmlFor="bio" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Professional Bio
+                      <Label htmlFor="bio" className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                        <FileText className="h-5 w-5 text-slate-400" /> Professional Bio
                       </Label>
                       <Textarea
                         id="bio"
                         name="bio"
                         value={formData.bio}
                         onChange={handleInputChange}
-                        rows={4}
-                        placeholder="Tell us about your medical experience and expertise..."
+                        rows={5}
+                        className="rounded-xl bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:border-blue-500 shadow-sm resize-none p-4"
+                        placeholder="Tell patients about your medical experience, approach to care, and expertise..."
                       />
                     </div>
                   </div>
                 )}
 
                 {/* Submit Button */}
-                <div className="pt-6">
+                <div className="pt-8 pb-4">
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-sky-600 hover:bg-sky-700"
+                    className={`w-full text-white rounded-xl h-14 text-lg font-bold shadow-xl hover:-translate-y-0.5 transition-all duration-300 ${
+                      selectedRole === 'patient' ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20' : 
+                      selectedRole === 'doctor' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' : 
+                      'bg-purple-600 hover:bg-purple-700 shadow-purple-600/20'
+                    }`}
                   >
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </div>
 
-                {/* Login Link */}
-                <div className="text-center">
-                  <p className="text-gray-600">
+                <div className="text-center pt-2 border-t border-slate-200">
+                  <p className="text-slate-600 font-medium">
                     Already have an account?{' '}
-                    <Link to="/login" className="text-sky-600 hover:text-sky-500 font-semibold">
+                    <Link to="/login" className="text-sky-600 hover:text-sky-500 font-bold transition-colors">
                       Sign in here
                     </Link>
                   </p>
                 </div>
               </form>
-            </CardContent>
-          </Card>
+             </div>
+          </div>
         </div>
       </div>
     </div>

@@ -254,7 +254,6 @@ serviceSchema.index({ category: 1 });
 serviceSchema.index({ isActive: 1 });
 serviceSchema.index({ isEmergencyService: 1 });
 serviceSchema.index({ title: 'text', description: 'text', tags: 'text' });
-serviceSchema.index({ slug: 1 });
 serviceSchema.index({ 'rating.average': -1 });
 
 // Pre-save middleware to generate slug

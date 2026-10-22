@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar, 
   Clock, 
@@ -34,7 +35,7 @@ import {
   ChevronRight,
   Loader2
 } from 'lucide-react';
-import { User as UserType } from '@/services/api';
+import { User as UserType, appointmentsApi, usersApi } from '@/services/api';
 
 interface AppointmentManagementProps {
   user: UserType;
@@ -79,6 +80,15 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [patients, setPatients] = useState<UserType[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [newApt, setNewApt] = useState({
+    patientId: '',
+    date: selectedDate,
+    time: '09:00',
+    reason: '',
+    notes: ''
+  });
 
   // Generate time slots for the day
   useEffect(() => {
@@ -91,7 +101,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
         for (let minute = 0; minute < 60; minute += 30) {
           const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
           const appointment = appointments.find(
-            apt => apt.date === selectedDate && apt.time === timeString
+            apt => apt.date === selectedDate && apt.time === timeString && ['scheduled', 'confirmed', 'in-progress'].includes(apt.status)
           );
           
           slots.push({
@@ -110,17 +120,49 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
 
   // Fetch appointments
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const fetchAppointmentsAndPatients = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await api.getDoctorAppointments(user._id);
+        const [response, patientsRes] = await Promise.all([
+          appointmentsApi.getAll(),
+          usersApi.getPatients()
+        ]);
         
-        // Mock data - will be replaced with real API
-        const mockAppointments: Appointment[] = [];
-        
-        setAppointments(mockAppointments);
-        setFilteredAppointments(mockAppointments);
+        if (patientsRes.success && patientsRes.data) {
+          setPatients(patientsRes.data);
+        }
+
+        if (response.success && response.data) {
+          const mappedAppointments: Appointment[] = response.data.map((apt: any) => {
+            const aptDateObj = new Date(apt.appointmentDate);
+            const aptDateStr = `${aptDateObj.getFullYear()}-${String(aptDateObj.getMonth() + 1).padStart(2, '0')}-${String(aptDateObj.getDate()).padStart(2, '0')}`;
+            return {
+              id: apt._id,
+              patientId: apt.patient?._id || '',
+              patientName: apt.patient ? `${apt.patient.firstName} ${apt.patient.lastName}` : 'Unknown Patient',
+              patientEmail: apt.patient?.email || '',
+              patientPhone: apt.patient?.phone || '',
+              date: aptDateStr,
+              time: apt.appointmentTime || '09:00',
+              duration: apt.duration || 30,
+              type: apt.type || 'consultation',
+              status: apt.status || 'scheduled',
+              reason: apt.reason || 'General Consultation',
+              notes: apt.notes,
+              symptoms: apt.symptoms || [],
+              urgency: apt.urgency || 'medium',
+              location: apt.location,
+              isVirtual: apt.isVirtual || false,
+              meetingLink: apt.meetingLink,
+              reminderSent: apt.reminderSent || false,
+              createdAt: apt.createdAt || new Date().toISOString(),
+              updatedAt: apt.updatedAt || new Date().toISOString()
+            };
+          });
+          
+          setAppointments(mappedAppointments);
+          setFilteredAppointments(mappedAppointments);
+        }
       } catch (error) {
         console.error('Failed to fetch appointments:', error);
       } finally {
@@ -128,7 +170,7 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
       }
     };
 
-    fetchAppointments();
+    fetchAppointmentsAndPatients();
   }, [user._id]);
 
   // Filter appointments
@@ -186,7 +228,8 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
 
   const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     try {
-      // TODO: API call to update appointment status
+      await appointmentsApi.update(appointmentId, { status: newStatus as any });
+      
       setAppointments(prev => 
         prev.map(apt => 
           apt.id === appointmentId 
@@ -196,6 +239,63 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
       );
     } catch (error) {
       console.error('Failed to update appointment status:', error);
+    }
+  };
+
+  const handleCreateAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newApt.patientId || !newApt.date || !newApt.time || !newApt.reason) return;
+    
+    try {
+      setCreating(true);
+      const res = await appointmentsApi.create({
+        doctor: user._id,
+        patientId: newApt.patientId,
+        appointmentDate: newApt.date,
+        appointmentTime: newApt.time,
+        reason: newApt.reason,
+        notes: newApt.notes
+      });
+      
+      if (res.success) {
+        setShowNewAppointment(false);
+        // Quick local state update to reflect immediately
+        const created = res.data as any;
+        const aptDateObj = new Date(created.appointmentDate);
+        const aptDateStr = `${aptDateObj.getFullYear()}-${String(aptDateObj.getMonth() + 1).padStart(2, '0')}-${String(aptDateObj.getDate()).padStart(2, '0')}`;
+        
+        // Find patient name from our list
+        const patientObj = patients.find(p => p._id === newApt.patientId);
+        
+        const newAptObj: Appointment = {
+          id: created._id,
+          patientId: created.patient || newApt.patientId,
+          patientName: patientObj ? `${patientObj.firstName} ${patientObj.lastName}` : 'Unknown Patient',
+          patientEmail: patientObj?.email || '',
+          patientPhone: patientObj?.phone || '',
+          date: aptDateStr,
+          time: created.appointmentTime || newApt.time,
+          duration: created.duration || 30,
+          type: created.type || 'consultation',
+          status: 'scheduled',
+          reason: created.reason || newApt.reason,
+          notes: newApt.notes,
+          urgency: 'medium',
+          isVirtual: false,
+          reminderSent: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        setAppointments(prev => [...prev, newAptObj]);
+        // Reset form
+        setNewApt({ patientId: '', date: selectedDate, time: '09:00', reason: '', notes: '' });
+      }
+    } catch (error) {
+      console.error('Failed to create appointment:', error);
+      alert('Failed to book appointment: Time slot might be unavailable.');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -239,12 +339,45 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
                   Add a new appointment to your schedule
                 </DialogDescription>
               </DialogHeader>
-              {/* New appointment form would go here */}
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  New appointment scheduling form will be implemented here.
-                </p>
-              </div>
+              <form onSubmit={handleCreateAppointment} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Patient</Label>
+                    <Select value={newApt.patientId} onValueChange={(val) => setNewApt({...newApt, patientId: val})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a patient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.map(p => (
+                          <SelectItem key={p._id} value={p._id}>{p.firstName} {p.lastName}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input type="date" value={newApt.date} onChange={e => setNewApt({...newApt, date: e.target.value})} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Time</Label>
+                    <Input type="time" value={newApt.time} onChange={e => setNewApt({...newApt, time: e.target.value})} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Reason</Label>
+                    <Input value={newApt.reason} onChange={e => setNewApt({...newApt, reason: e.target.value})} placeholder="e.g. Follow-up" required />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Notes (Optional)</Label>
+                  <Textarea value={newApt.notes} onChange={e => setNewApt({...newApt, notes: e.target.value})} placeholder="Any additional instructions..." />
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button type="button" variant="outline" onClick={() => setShowNewAppointment(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-sky-600 hover:bg-sky-700" disabled={creating}>
+                    {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule'}
+                  </Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -339,18 +472,19 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
             />
           </div>
           
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="all">All Status</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px] bg-white">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="in-progress">In Progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -443,37 +577,23 @@ const AppointmentManagement: React.FC<AppointmentManagementProps> = ({ user }) =
                         </div>
                         
                         <div className="flex flex-col items-end space-y-2 ml-4">
-                          <div className="flex space-x-2">
-                            {appointment.status === 'scheduled' && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleStatusChange(appointment.id, 'confirmed')}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-1" />
-                                Confirm
-                              </Button>
-                            )}
-                            
-                            {appointment.status === 'confirmed' && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleStatusChange(appointment.id, 'in-progress')}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                Start
-                              </Button>
-                            )}
-                            
-                            {appointment.status === 'in-progress' && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleStatusChange(appointment.id, 'completed')}
-                                className="bg-gray-600 hover:bg-gray-700"
-                              >
-                                Complete
-                              </Button>
-                            )}
+                          <div className="flex items-center space-x-2">
+                            <Select 
+                              value={appointment.status} 
+                              onValueChange={(val) => handleStatusChange(appointment.id, val)}
+                            >
+                              <SelectTrigger className="w-[140px] h-8 text-xs">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="scheduled">Scheduled (Pending)</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="in-progress">In Progress</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                <SelectItem value="no-show">No Show</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           
                           <div className="flex space-x-2">

@@ -18,9 +18,7 @@ import {
   X, 
   Calendar,
   User,
-  Settings,
   LogOut,
-  FileText,
   Shield,
   Bell
 } from 'lucide-react';
@@ -97,12 +95,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-premium border-b border-slate-100 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-white/70 backdrop-blur-2xl border-b border-white/50 sticky top-0 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="gradient-sky p-2.5 rounded-xl shadow-lg group-hover:shadow-premium transition-all duration-300">
+            <div className="bg-gradient-to-br from-sky-400 to-blue-600 p-2.5 rounded-xl shadow-lg group-hover:shadow-premium transition-all duration-300">
               <Stethoscope className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
@@ -174,8 +172,10 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.profileImage || '/placeholder.svg'} />
-                        <AvatarFallback>
+                        {user.profileImage && user.profileImage !== '/placeholder.svg' && (
+                          <AvatarImage src={user.profileImage} />
+                        )}
+                        <AvatarFallback className="bg-sky-100 text-sky-700 font-semibold border border-sky-200">
                           {user.firstName[0]}{user.lastName[0]}
                         </AvatarFallback>
                       </Avatar>
@@ -215,20 +215,8 @@ const Navbar = () => {
                             <span>Book Appointment</span>
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to="/medical-records" className="w-full cursor-pointer">
-                            <FileText className="mr-2 h-4 w-4" />
-                            <span>Medical Records</span>
-                          </Link>
-                        </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="w-full cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -239,10 +227,10 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="rounded-full px-6 font-semibold border-slate-200 hover:bg-slate-50 transition-all">
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button asChild className="bg-sky-600 hover:bg-sky-700">
+                <Button asChild className="bg-slate-900 hover:bg-slate-800 text-white rounded-full px-6 font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
                   <Link to="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -307,8 +295,10 @@ const Navbar = () => {
                     <div className="px-3 py-2">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.profileImage || '/placeholder.svg'} />
-                          <AvatarFallback>
+                          {user.profileImage && user.profileImage !== '/placeholder.svg' && (
+                            <AvatarImage src={user.profileImage} />
+                          )}
+                          <AvatarFallback className="bg-sky-100 text-sky-700 font-semibold border border-sky-200">
                             {user.firstName[0]}{user.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
@@ -339,22 +329,8 @@ const Navbar = () => {
                         >
                           Book Appointment
                         </Link>
-                        <Link
-                          to="/medical-records"
-                          className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          Medical Records
-                        </Link>
                       </>
                     )}
-                    <Link
-                      to="/profile"
-                      className="block px-3 py-2 text-gray-700 hover:text-sky-600 transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Settings
-                    </Link>
                     <button
                       onClick={() => {
                         handleLogout();
